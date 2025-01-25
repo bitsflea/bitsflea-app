@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, ShoppingBag, Star, Truck, Shield, ArrowRight, MessageCircle, XCircle, ClipboardCheck, Heart, UserPlus } from 'lucide-react';
-import { Product, ProductInfo, ProductStatus } from '../types';
+import { Product, ProductInfo, ProductStatus, UserExtendInfo } from '../types';
 import { ImageCarousel } from './ImageCarousel';
 import { Chat } from './Chat';
 import { ReviewForm } from './ReviewForm';
 import { getCategoryByValue } from '../data/categories';
+import { defaultProductInfo, getProductInfo, getUserExtendInfo } from '../utils/ipfs';
+import { useHelia } from '../context/HeliaContext';
+import { useToast } from '../context/ToastContext';
 
 interface ProductDetailProps {
   product: Product;
@@ -13,7 +16,7 @@ interface ProductDetailProps {
   isManagement?: boolean;
   isReview?: boolean;
   onDelist?: (productId: string) => void;
-  onReview?: (productId: string | undefined, approved: boolean, reason: string) => void;
+  onReview?: (productId: string, approved: boolean, reason: string) => void;
 }
 
 export const ProductDetail: React.FC<ProductDetailProps> = ({
@@ -29,6 +32,39 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const ctx = useHelia();
+  const { showToast } = useToast();
+  const [userExtendInfo, setUserExtendInfo] = useState<UserExtendInfo>({ x: "", tg: "", e: "", d: "" });
+
+  useEffect(() => {
+    const loadProductInfo = async () => {
+      try {
+        const info = await getProductInfo(ctx, product, 5000);
+        // console.log("info:", info);
+        productInfo = info;
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          showToast("error", e.message)
+        } else {
+          console.log(e);
+        }
+      }
+    }
+    if (ctx && ctx.fs) {
+      loadProductInfo()
+    }
+  }, [ctx?.fs, product.description])
+
+  useEffect(() => {
+    const fetchUserExtendInfo = async () => {
+      const result = await ctx.rpc?.request("getUsers", [1, 1, product.uid, null, null])
+      // console.log("result:", result)
+      const info = await getUserExtendInfo(ctx, result.result[0].extendInfo);
+      console.log("info:", info)
+      setUserExtendInfo(info);
+    };
+    fetchUserExtendInfo();
+  }, [product.uid])
 
   const features = [
     { icon: Star, text: "Verified Seller" },
@@ -53,7 +89,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     }
   };
 
-  const handleReview = (productId: string | undefined, approved: boolean, reason: string) => {
+  const handleReview = (productId: string, approved: boolean, reason: string) => {
     if (onReview) {
       onReview(productId, approved, reason);
       onClose();
@@ -72,12 +108,16 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     // TODO: Implement follow functionality
   };
 
+  const openTelegram = (name: string) => {
+    window.open(`https://t.me/${name}`, '_blank');
+  }
+
   // 模拟卖家信息
-  const seller = {
-    id: 2,
-    name: "John Doe",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop&q=60"
-  };
+  // const seller = {
+  //   id: 2,
+  //   name: "John Doe",
+  //   avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop&q=60"
+  // };
 
   return (
     <>
@@ -157,13 +197,24 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
 
                 {/* Actions */}
                 {isReview ? (
-                  <button
-                    onClick={() => setShowReviewForm(true)}
-                    className="w-full bg-primary-600 text-white px-6 py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-primary-700 transition-all duration-300 shadow-lg shadow-primary-100"
-                  >
-                    <ClipboardCheck className="h-5 w-5" />
-                    Review Product
-                  </button>
+                  <div className="space-y-4">
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setShowReviewForm(true)}
+                        className="flex-1 bg-primary-600 text-white px-6 py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-primary-700 transition-all duration-300 shadow-lg shadow-primary-100"
+                      >
+                        <ClipboardCheck className="h-5 w-5" />
+                        Review Product
+                      </button>
+                      <button
+                        onClick={() => openTelegram(userExtendInfo.tg)}
+                        className="bg-white border-2 border-primary-600 text-primary-600 px-6 py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-primary-50 transition-all duration-300"
+                      >
+                        <MessageCircle className="h-5 w-5" />
+                        <span className="hidden sm:inline">Contact Seller</span>
+                      </button>
+                    </div>
+                  </div>
                 ) : !isManagement ? (
                   <div className="space-y-4">
                     <div className="flex gap-4">
@@ -175,7 +226,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
                         Buy Now
                       </button>
                       <button
-                        onClick={() => setShowChat(true)}
+                        onClick={() => openTelegram(userExtendInfo.tg)}
                         className="bg-white border-2 border-primary-600 text-primary-600 px-6 py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-primary-50 transition-all duration-300"
                       >
                         <MessageCircle className="h-5 w-5" />
@@ -213,13 +264,13 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">Condition</h4>
                     <ul className="space-y-2 text-gray-600">
-                      {productInfo.condition.map((item) => (<li>{item}</li>))}
+                      {productInfo.condition.map((item, i) => (<li key={i}>{item}</li>))}
                     </ul>
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">Shipping</h4>
                     <ul className="space-y-2 text-gray-600">
-                      {productInfo.shipping.map((item) => (<li>{item}</li>))}
+                      {productInfo.shipping.map((item, i) => (<li key={i} >{item}</li>))}
                     </ul>
                   </div>
                 </div>
@@ -230,7 +281,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
       </div>
 
       {/* Chat Modal */}
-      {showChat && (
+      {/* {showChat && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center">
           <Chat
             onClose={() => setShowChat(false)}
@@ -238,7 +289,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
             product={productInfo}
           />
         </div>
-      )}
+      )} */}
 
       {/* Review Form Modal */}
       {showReviewForm && (

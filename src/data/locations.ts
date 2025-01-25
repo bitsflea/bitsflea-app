@@ -1,38 +1,6 @@
 import { RegionData } from '../types';
 
 export const locationData: { [key: string]: RegionData } = {
-  CN: {
-    name: '中国',
-    regions: {
-      'Beijing': {
-        name: '北京市',
-        coordinates: { lat: 39.9042, lng: 116.4074 },
-        districts: {
-          'Chaoyang': { lat: 39.9219, lng: 116.4437 },
-          'Haidian': { lat: 39.9946, lng: 116.2988 },
-          'Dongcheng': { lat: 39.9289, lng: 116.4160 }
-        }
-      },
-      'Shanghai': {
-        name: '上海市',
-        coordinates: { lat: 31.2304, lng: 121.4737 },
-        districts: {
-          'Pudong': { lat: 31.2304, lng: 121.5435 },
-          'Huangpu': { lat: 31.2277, lng: 121.4852 },
-          'Jing\'an': { lat: 31.2304, lng: 121.4737 }
-        }
-      },
-      'Guangdong': {
-        name: '广东省',
-        coordinates: { lat: 23.1357, lng: 113.2587 },
-        districts: {
-          'Guangzhou': { lat: 23.1291, lng: 113.2644 },
-          'Shenzhen': { lat: 22.5431, lng: 114.0579 },
-          'Dongguan': { lat: 23.0489, lng: 113.7447 }
-        }
-      }
-    }
-  },
   US: {
     name: 'United States',
     regions: {
@@ -222,6 +190,38 @@ export const locationData: { [key: string]: RegionData } = {
           'Denpasar': { lat: -8.6705, lng: 115.2126 },
           'Ubud': { lat: -8.5069, lng: 115.2625 },
           'Kuta': { lat: -8.7215, lng: 115.1689 }
+        }
+      }
+    }
+  },
+  CN: {
+    name: '中国',
+    regions: {
+      'Beijing': {
+        name: '北京市',
+        coordinates: { lat: 39.9042, lng: 116.4074 },
+        districts: {
+          'Chaoyang': { lat: 39.9219, lng: 116.4437 },
+          'Haidian': { lat: 39.9946, lng: 116.2988 },
+          'Dongcheng': { lat: 39.9289, lng: 116.4160 }
+        }
+      },
+      'Shanghai': {
+        name: '上海市',
+        coordinates: { lat: 31.2304, lng: 121.4737 },
+        districts: {
+          'Pudong': { lat: 31.2304, lng: 121.5435 },
+          'Huangpu': { lat: 31.2277, lng: 121.4852 },
+          'Jing\'an': { lat: 31.2304, lng: 121.4737 }
+        }
+      },
+      'Guangdong': {
+        name: '广东省',
+        coordinates: { lat: 23.1357, lng: 113.2587 },
+        districts: {
+          'Guangzhou': { lat: 23.1291, lng: 113.2644 },
+          'Shenzhen': { lat: 22.5431, lng: 114.0579 },
+          'Dongguan': { lat: 23.0489, lng: 113.7447 }
         }
       }
     }

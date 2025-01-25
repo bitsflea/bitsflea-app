@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ProductCard } from './ProductCard';
 import { Loader2 } from 'lucide-react';
-import { getClient } from '../utils/client';
 import { Product } from '../types';
+import { useHelia } from '../context/HeliaContext';
+import { useToast } from '../context/ToastContext';
 
 interface ProductGridProps {
   activeCategory: number | null;
 }
 
 const ITEMS_PER_PAGE = 8;
-const client = getClient();
-
 
 export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
@@ -18,18 +17,30 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const loaderRef = useRef<HTMLDivElement>(null);
+  const { rpc } = useHelia();
+  const { showToast } = useToast();
 
   useEffect(() => {
     const getProducts = async () => {
-      const data = await client.request("getProducts", [page, ITEMS_PER_PAGE, activeCategory, null]);
-      console.log("data:", data);
-      setDisplayedProducts(data.result);
-      setPage(1);
-      setHasMore(data.length > ITEMS_PER_PAGE);
+      try {
+        const data = await rpc!.request("getProducts", [page, ITEMS_PER_PAGE, activeCategory, null]);
+        console.log("data:", data);
+        setDisplayedProducts(data.result);
+        setPage(1);
+        setHasMore(data.result.length > ITEMS_PER_PAGE);
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          showToast("error", e.message);
+        } else {
+          console.log("getProducts:",e);
+        }
+      }
+
     }
-    // Reset when category changes
-    getProducts();
-  }, [activeCategory]);
+    if (rpc) {
+      getProducts();
+    }
+  }, [activeCategory, rpc]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -58,7 +69,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
     setLoading(true);
 
     const nextPage = page + 1;
-    const data = await client.request("getProducts", [nextPage, ITEMS_PER_PAGE, activeCategory, null]);
+    const data = await rpc!.request("getProducts", [nextPage, ITEMS_PER_PAGE, activeCategory, null]);
 
     if (data.result.length >= ITEMS_PER_PAGE) {
       setDisplayedProducts(prev => [...prev, ...data.result]);

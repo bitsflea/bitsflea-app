@@ -16,22 +16,31 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [localImages, setLocalImages] = useState<string[]>([]);
-
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchImages = async () => {
-      if (!heliaContext || !heliaContext.fs || !images) return
+      setLoading(true)
+      if (!heliaContext || !heliaContext.fs || !images || images.length < 1) {
+        setLoading(false)
+        return
+      }
       const _localImages = await getImages(heliaContext, images)
+      // console.log("_localImages:", _localImages)
+      setLoading(false)
       setLocalImages(_localImages)
     }
     fetchImages()
+  }, [images.length])
+
+  useEffect(() => {
     if (!isHovered && localImages.length > 1) {
       const timer = setInterval(() => {
         setCurrentIndex((current) => (current + 1) % images.length)
       }, 3000);
       return () => clearInterval(timer);
     }
-  }, [isHovered, images.length]);
+  }, [isHovered]);
 
   const goToNext = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -49,16 +58,22 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {localImages.map((image, index) => (
-        <img
-          key={image}
-          src={image}
-          alt={`Product image ${index + 1}`}
-          className={`absolute w-full h-full object-cover transition-transform duration-500 ease-in-out ${index === currentIndex ? 'translate-x-0' :
-            index < currentIndex ? '-translate-x-full' : 'translate-x-full'
-            }`}
-        />
-      ))}
+      {loading ? <img src='/loading.gif' className='absolute h-full left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2' /> :
+        (
+          localImages.length > 0 ?
+            localImages.map((image, index) => (
+              <img
+                key={image}
+                src={image}
+                alt={`Product image ${index + 1}`}
+                className={`absolute w-full h-full object-cover transition-transform duration-500 ease-in-out ${index === currentIndex ? 'translate-x-0' :
+                  index < currentIndex ? '-translate-x-full' : 'translate-x-full'
+                  }`}
+              />
+            ))
+            : <img src='/logo.png' className='absolute h-full left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2' />
+        )
+      }
 
       {localImages.length > 1 && (
         <>

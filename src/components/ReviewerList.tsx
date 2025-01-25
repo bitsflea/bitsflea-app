@@ -1,103 +1,126 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ThumbsUp, ThumbsDown, Star, Shield, AlertCircle, Search } from 'lucide-react';
+import { useHelia } from '../context/HeliaContext';
+import { Reviewer } from '../types';
+import { ImageIPFS } from './ImageIPFS';
+import { useAuth } from '../context/AuthContext';
+import { ExtendInfo } from './ExtendInfo';
+import { useLoading } from '../context/LoadingContext';
+import config from '../data/config';
+import { useToast } from '../context/ToastContext';
 
-interface Reviewer {
-  id: number;
-  avatar: string;
-  nickname: string;
-  description: string;
-  creditScore: number;
-  upVotes: number;
-  downVotes: number;
-  isReviewer: boolean;
-  hasVoted?: 'up' | 'down';
-  address: string;
-}
-
-const mockReviewers: Reviewer[] = [
-  {
-    id: 1,
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop&q=60",
-    nickname: "Alex Thompson",
-    description: "Senior blockchain developer specializing in smart contract security audits with 5 years of review experience.",
-    creditScore: 4.8,
-    upVotes: 128,
-    downVotes: 12,
-    isReviewer: true,
-    address: "0x1234...5678"
-  },
-  {
-    id: 2,
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=60",
-    nickname: "Sarah Chen",
-    description: "Blockchain security expert with extensive experience in code auditing and deep knowledge of DeFi ecosystems.",
-    creditScore: 4.9,
-    upVotes: 156,
-    downVotes: 8,
-    isReviewer: true,
-    address: "0x9876...4321"
-  },
-  {
-    id: 3,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=60",
-    nickname: "Michael Rodriguez",
-    description: "Full-stack developer skilled in identifying potential security vulnerabilities and maintaining community safety.",
-    creditScore: 4.7,
-    upVotes: 98,
-    downVotes: 15,
-    isReviewer: false,
-    address: "0xabcd...efgh"
-  }
-];
+const ITEMS_PER_PAGE = 8;
 
 export const ReviewerList: React.FC = () => {
-  const [reviewers, setReviewers] = useState<Reviewer[]>(mockReviewers);
+  const [reviewers, setReviewers] = useState<Reviewer[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<'nickname' | 'address'>('nickname');
+  const { user } = useAuth();
+  const { rpc, nuls } = useHelia();
 
-  const handleVote = (reviewerId: number, voteType: 'up' | 'down') => {
-    setReviewers(prev => prev.map(reviewer => {
-      if (reviewer.id === reviewerId) {
-        if (reviewer.hasVoted) {
-          const updatedReviewer = {
-            ...reviewer,
-            upVotes: reviewer.hasVoted === 'up' ? reviewer.upVotes - 1 : reviewer.upVotes,
-            downVotes: reviewer.hasVoted === 'down' ? reviewer.downVotes - 1 : reviewer.downVotes,
-            hasVoted: undefined
-          };
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
-          if (reviewer.hasVoted === voteType) {
-            return updatedReviewer;
-          }
+  const { showLoading, hideLoading } = useLoading();
+  const { showToast } = useToast();
 
-          return {
-            ...updatedReviewer,
-            upVotes: voteType === 'up' ? updatedReviewer.upVotes + 1 : updatedReviewer.upVotes,
-            downVotes: voteType === 'down' ? updatedReviewer.downVotes + 1 : updatedReviewer.downVotes,
-            hasVoted: voteType
-          };
+  useEffect(() => {
+    const fetchReviewer = async () => {
+      const name = searchType === 'nickname' ? searchQuery : null
+      const address = searchType === 'address' ? searchQuery : null
+      const data = await rpc!.request("getReviewer", [name, address, page, ITEMS_PER_PAGE])
+      console.log("data:", data)
+      setReviewers(data.result)
+    }
+    if (rpc) {
+      fetchReviewer()
+    }
+  }, [searchQuery, rpc, user])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMore && !loading) {
+          loadMore();
         }
+      },
+      { threshold: 0.1 }
+    );
 
-        return {
-          ...reviewer,
-          upVotes: voteType === 'up' ? reviewer.upVotes + 1 : reviewer.upVotes,
-          downVotes: voteType === 'down' ? reviewer.downVotes + 1 : reviewer.downVotes,
-          hasVoted: voteType
-        };
+    const currentLoader = loaderRef.current;
+    if (currentLoader) {
+      observer.observe(currentLoader);
+    }
+
+    return () => {
+      if (currentLoader) {
+        observer.unobserve(currentLoader);
       }
-      return reviewer;
-    }));
+    };
+  }, [hasMore, loading, page, searchQuery]);
+
+  const loadMore = async () => {
+    setLoading(true);
+
+    const nextPage = page + 1;
+    const name = searchType === 'nickname' ? searchQuery : null
+    const address = searchType === 'address' ? searchQuery : null
+    const data = await rpc!.request("getReviewer", [name, address, page, ITEMS_PER_PAGE])
+
+    if (data.result.length >= ITEMS_PER_PAGE) {
+      setReviewers(prev => [...prev, ...data.result]);
+      setPage(nextPage);
+      setHasMore(data.result.length >= ITEMS_PER_PAGE);
+    } else {
+      setHasMore(false);
+    }
+
+    setLoading(false);
+  };
+
+  const hasVoted = (voted: string) => {
+    const obj = JSON.parse(voted)
+    return Object.keys(obj).includes(user!.uid)
+  }
+
+  const handleVote = async (reviewerId: string, voteType: 'up' | 'down') => {
+    console.log(reviewerId, voteType)
+    showLoading();
+    try {
+      const callData = {
+        from: user!.uid,
+        value: 0,
+        contractAddress: config.contracts.Bitsflea,
+        methodName: "voteReviewer",
+        methodDesc: "",
+        args: [reviewerId, voteType === 'up'],
+        multyAssetValues: []
+      }
+      console.log("callData:", callData);
+      const txHash = await window.nabox!.contractCall(callData);
+      await nuls?.waitingResult(txHash);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        showToast("error", e.message)
+      } else {
+        console.error("Unknown error:", e);
+      }
+    }
+    hideLoading();
   };
 
   const filteredReviewers = useMemo(() => {
     if (!searchQuery) return reviewers;
-    
+
     const query = searchQuery.toLowerCase();
     return reviewers.filter(reviewer => {
       if (searchType === 'nickname') {
         return reviewer.nickname.toLowerCase().includes(query);
       } else {
-        return reviewer.address.toLowerCase().includes(query);
+        return reviewer.uid.toLowerCase().includes(query);
       }
     });
   }, [reviewers, searchQuery, searchType]);
@@ -133,21 +156,19 @@ export const ReviewerList: React.FC = () => {
             <div className="flex bg-white rounded-lg border border-gray-200 p-1">
               <button
                 onClick={() => setSearchType('nickname')}
-                className={`px-4 py-1.5 rounded-md transition-colors ${
-                  searchType === 'nickname'
-                    ? 'bg-primary-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
+                className={`px-4 py-1.5 rounded-md transition-colors ${searchType === 'nickname'
+                  ? 'bg-primary-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-50'
+                  }`}
               >
                 Nickname
               </button>
               <button
                 onClick={() => setSearchType('address')}
-                className={`px-4 py-1.5 rounded-md transition-colors ${
-                  searchType === 'address'
-                    ? 'bg-primary-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
+                className={`px-4 py-1.5 rounded-md transition-colors ${searchType === 'address'
+                  ? 'bg-primary-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-50'
+                  }`}
               >
                 Address
               </button>
@@ -159,8 +180,8 @@ export const ReviewerList: React.FC = () => {
         <div className="space-y-6">
           {filteredReviewers.length > 0 ? (
             filteredReviewers.map(reviewer => (
-              <div 
-                key={reviewer.id}
+              <div
+                key={reviewer.uid}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300 relative"
               >
                 {reviewer.isReviewer && (
@@ -172,8 +193,8 @@ export const ReviewerList: React.FC = () => {
                 <div className="flex items-start gap-6">
                   {/* Avatar */}
                   <div className="flex-shrink-0">
-                    <img
-                      src={reviewer.avatar}
+                    <ImageIPFS
+                      image={reviewer.head}
                       alt={reviewer.nickname}
                       className="w-16 h-16 rounded-full object-cover border-2 border-gray-100"
                     />
@@ -189,37 +210,29 @@ export const ReviewerList: React.FC = () => {
                           </h3>
                           <div className="flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2 py-1 rounded-full text-sm">
                             <Star className="h-4 w-4 fill-current" />
-                            <span>{reviewer.creditScore}</span>
+                            <span>{reviewer.creditValue}</span>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-500 mb-2">{reviewer.address}</p>
-                        <p className="text-gray-600 mb-4">{reviewer.description}</p>
+                        <p className="text-sm text-gray-500 mb-2">{reviewer.uid}</p>
+                        <ExtendInfo className="text-gray-600 mb-4" extendInfo={reviewer.extendInfo} />
                       </div>
                     </div>
 
                     {/* Voting */}
                     <div className="flex items-center gap-6">
                       <button
-                        onClick={() => handleVote(reviewer.id, 'up')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                          reviewer.hasVoted === 'up'
-                            ? 'bg-green-100 text-green-700'
-                            : 'hover:bg-gray-100 text-gray-600'
-                        }`}
+                        onClick={() => handleVote(reviewer.uid, 'up')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors hover:bg-gray-100 text-gray-600`}
                       >
-                        <ThumbsUp className={`h-5 w-5 ${reviewer.hasVoted === 'up' ? 'fill-current' : ''}`} />
-                        <span>{reviewer.upVotes}</span>
+                        <ThumbsUp className={`h-5 w-5 ${hasVoted(reviewer.voted) ? 'fill-current' : ''}`} />
+                        <span>{reviewer.approveCount}</span>
                       </button>
                       <button
-                        onClick={() => handleVote(reviewer.id, 'down')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                          reviewer.hasVoted === 'down'
-                            ? 'bg-red-100 text-red-700'
-                            : 'hover:bg-gray-100 text-gray-600'
-                        }`}
+                        onClick={() => handleVote(reviewer.uid, 'down')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors hover:bg-gray-100 text-gray-600`}
                       >
-                        <ThumbsDown className={`h-5 w-5 ${reviewer.hasVoted === 'down' ? 'fill-current' : ''}`} />
-                        <span>{reviewer.downVotes}</span>
+                        <ThumbsDown className={`h-5 w-5 ${hasVoted(reviewer.voted) ? 'fill-current' : ''}`} />
+                        <span>{reviewer.againstCount}</span>
                       </button>
                     </div>
                   </div>

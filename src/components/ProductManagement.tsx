@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Plus, Filter, ChevronDown } from 'lucide-react';
 import { Product, ProductStatus } from '../types';
 import { ProductCard } from './ProductCard';
 import { ProductPublish } from './ProductPublish';
-import { addProductInfo, addUserExtendInfo } from '../utils/ipfs';
+import { addProductInfo } from '../utils/ipfs';
 import { useHelia } from '../context/HeliaContext';
 import config from '../data/config';
+import { useAuth } from '../context/AuthContext';
+import { useLoading } from '../context/LoadingContext';
+import { parseNULS } from 'nuls-api-v2';
+import { useToast } from '../context/ToastContext';
+import { getCurrency } from '../utils/tools';
 
 interface ProductManagementProps {
-  products: Product[];
+  // products: Product[];
 }
 
 const statusFilters: { value: ProductStatus | 'all'; label: string }[] = [
@@ -20,20 +25,86 @@ const statusFilters: { value: ProductStatus | 'all'; label: string }[] = [
   { value: ProductStatus.LOCKED, label: 'Locked' },
 ];
 
-export const ProductManagement: React.FC<ProductManagementProps> = ({ products }) => {
+const ITEMS_PER_PAGE = 8;
+
+export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
   const [activeFilter, setActiveFilter] = useState<ProductStatus | 'all'>('all');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showPublishForm, setShowPublishForm] = useState(false);
-  const [managedProducts, setManagedProducts] = useState(products);
+  const [managedProducts, setManagedProducts] = useState<Product[]>([]);
   const ctx = useHelia();
+  const { user } = useAuth();
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const loaderRef = useRef<HTMLDivElement>(null);
+  const { showLoading, hideLoading } = useLoading();
+  const { showToast } = useToast();
 
-  const filteredProducts = activeFilter === 'all'
-    ? managedProducts
-    : managedProducts.filter(product => product.status === activeFilter);
 
   const activeFilterLabel = statusFilters.find(f => f.value === activeFilter)?.label;
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const data = await ctx.rpc!.request("getProducts", [page, ITEMS_PER_PAGE, activeFilter == 'all' ? null : activeFilter, user!.uid, -1]);
+      console.log("fetchProducts data:", data);
+      if (data.result && data.result.length > 0) {
+        setManagedProducts(data.result);
+        setPage(1);
+        setHasMore(data.result.length < ITEMS_PER_PAGE ? false : true);
+      } else {
+        setHasMore(false);
+        setManagedProducts([]);
+      }
+    };
+
+    if (user) {
+      fetchProducts();
+    }
+  }, [user, activeFilter]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMore && !loading) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentLoader = loaderRef.current;
+    if (currentLoader) {
+      observer.observe(currentLoader);
+    }
+
+    return () => {
+      if (currentLoader) {
+        observer.unobserve(currentLoader);
+      }
+    };
+  }, [hasMore, loading, page, activeFilter]);
+
+  const loadMore = async () => {
+    setLoading(true);
+
+    const nextPage = page + 1;
+    const data = await ctx.rpc!.request("getProducts", [nextPage, ITEMS_PER_PAGE, activeFilter == 'all' ? null : activeFilter, null]);
+
+    if (data.result.length >= ITEMS_PER_PAGE) {
+      setManagedProducts(prev => [...prev, ...data.result]);
+      setPage(nextPage);
+      setHasMore(data.result.length >= ITEMS_PER_PAGE);
+    } else {
+      setHasMore(false);
+    }
+
+    setLoading(false);
+  };
+
   const handlePublish = async (data: any) => {
+    showLoading();
     console.log('Publishing product:', data);
     const cid = await addProductInfo(ctx, {
       name: data.name,
@@ -44,6 +115,37 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ products }
     })
     // const cid = await addUserExtendInfo(ctx, { e: "", x: "", tg: "@necklacex", d:"Senior reviewer focused on product quality control"})
     console.log('IPFS CID:', cid);
+    const pid = await ctx.bitsflea?.newProductId(user!.uid);
+    console.log("pid:", pid?.toString(10));
+    if (!pid) {
+      showToast("error", "Failed to obtain product ID");
+      hideLoading();
+      return;
+    }
+
+    try {
+      const position = `${data.location.coordinates.lat},${data.location.coordinates.lng}|${data.location.country},${data.location.region},${data.location.district}`
+      const currency = getCurrency(data.currency);
+      const callData = {
+        from: user!.uid,
+        value: 0,
+        contractAddress: config.contracts.Bitsflea,
+        methodName: "publish",
+        methodDesc: "",
+        args: [pid!.toString(10), data.category, cid, false, true, true, position, 0, 1, 1, `${parseNULS(data.shippingFee, currency.decimals)},${currency.value}`, `${parseNULS(data.price, currency.decimals)},${currency.value}`],
+        multyAssetValues: []
+      }
+      console.log("callData:", callData);
+      const txHash = await window.nabox!.contractCall(callData);
+      await ctx?.nuls?.waitingResult(txHash);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        showToast("error", e.message)
+      } else {
+        console.error("Unknown error");
+      }
+    }
+    hideLoading();
   };
 
 
@@ -119,9 +221,9 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ products }
           </div>
         </div>
 
-        {filteredProducts.length > 0 ? (
+        {managedProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            {filteredProducts.map(product => (
+            {managedProducts.map(product => (
               <ProductCard
                 key={product.pid}
                 product={product}

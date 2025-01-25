@@ -15,5 +15,14 @@ export default defineConfig({
   },
   define: {
     global: 'globalThis',
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://beta.api.nuls.io/jsonrpc/',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''), // 移除 /api 前缀
+      },
+    },
   }
 });

@@ -5,6 +5,7 @@ import { ImageCarousel } from './ImageCarousel';
 import { AlertCircle, CheckCircle2, Clock, Lock, XCircle } from 'lucide-react';
 import { defaultProductInfo, getProductInfo } from '../utils/ipfs';
 import { useHelia } from '../context/HeliaContext';
+import { useToast } from '../context/ToastContext';
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,7 @@ interface ProductCardProps {
   isReview?: boolean;
   onDelist?: (productId: string) => void;
   onClick?: () => void;
+  onReview?: (productId: string, approved: boolean, reason: string) => void;
 }
 
 const StatusBadge: React.FC<{ status: ProductStatus }> = ({ status }) => {
@@ -72,25 +74,38 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isManagement = false,
   isReview = false,
   onDelist,
-  onClick
+  onClick,
+  onReview
 }) => {
   const [showDetail, setShowDetail] = useState(false);
   const [productInfo, setProductInfo] = useState<ProductInfo>(defaultProductInfo);
   const ctx = useHelia();
+  const { showToast } = useToast();
 
   useEffect(() => {
     const loadProductInfo = async () => {
-      const info = await getProductInfo(ctx, product);
-      // console.log("info:", info);
-      setProductInfo(info);
+      try {
+        const info = await getProductInfo(ctx, product, 5000);
+        // console.log("info:", info);
+        setProductInfo(info);
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          showToast("error", e.message)
+        } else {
+          console.log(e);
+        }
+      }
     }
-    loadProductInfo()
+    if (ctx && ctx.fs) {
+      loadProductInfo()
+    }
   }, [ctx?.fs, product.description])
 
   const handleClick = () => {
+    console.log("productInfo:", productInfo)
     if (onClick) {
       onClick();
-    } else if (!isReview) {
+    } else {
       setShowDetail(true);
     }
   };
@@ -163,13 +178,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
       </div>
 
-      {showDetail && !isReview && (
+      {showDetail && (
         <ProductDetail
           product={product}
           productInfo={productInfo}
           onClose={() => setShowDetail(false)}
           isManagement={isManagement}
           onDelist={onDelist}
+          isReview={isReview}
+          onReview={onReview}
         />
       )}
     </>

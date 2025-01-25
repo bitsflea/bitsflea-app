@@ -69,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="flex items-center gap-2 text-primary-600 hover:text-primary-700 transition-colors"
             >
               <div className="relative">
-                <Sparkles className="h-6 w-6 text-primary-600 animate-pulse" />
+                <img src="/logo.png" className="h-6 w-6 text-primary-600 animate-pulse" />
                 <div className="absolute inset-0 bg-primary-100 rounded-full blur-lg opacity-30"></div>
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
@@ -102,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="flex items-center gap-2 text-gray-700 hover:text-primary-600 transition-colors"
                 >
                   <User className="h-5 w-5" />
-                  <span>{user?.name}</span>
+                  <span>{user?.nickname}</span>
                 </button>
                 <button
                   onClick={handleLogout}

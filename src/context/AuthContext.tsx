@@ -1,18 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-interface User {
-  id: number;
-  name: string;
-  isReviewer: boolean;
-  address: string;
-  phone?: string;
-  avatar?: string;
-  description?: string;
-}
+import { UserInfo } from '../types';
 
 interface AuthContextType {
-  user: User | null;
-  login: (user: User) => void;
+  user: UserInfo | null;
+  login: (user: UserInfo) => void;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -20,12 +11,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
+  const [user, setUser] = useState<UserInfo | null>(() => {
     const savedUser = localStorage.getItem('userInfo');
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  const login = (userData: User) => {
+  const login = (userData: UserInfo) => {
     setUser(userData);
     localStorage.setItem('userInfo', JSON.stringify(userData));
   };

@@ -2,90 +2,102 @@ import React, { useState } from 'react';
 import { X, Wallet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { RegisterModal } from './RegisterModal';
+import { useHelia } from '../context/HeliaContext';
+import config from '../data/config';
+import { Nabox, UserInfo } from '../types';
+import { getHash } from '../utils/nuls';
+import { addImages, addUserExtendInfo } from '../utils/ipfs';
+
+declare global {
+  interface Window {
+    nabox?: Nabox;
+  }
+}
 
 interface LoginModalProps {
   onClose: () => void;
   onSuccess: () => void;
 }
 
-interface UserInfo {
-  id: number;
-  name: string;
-  isReviewer: boolean;
-  address: string;
-  phone?: string;
-  avatar?: string;
-  description?: string;
-}
+
 
 export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
   const { login } = useAuth();
   const [showRegister, setShowRegister] = useState(false);
   const [connectedAddress, setConnectedAddress] = useState<string>('');
+  const ctx = useHelia();
 
   // Get user info from localStorage
-  const mockFetchUserInfo = async (address: string): Promise<UserInfo | null> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Create a default reviewer user
-    const defaultReviewer: UserInfo = {
-      id: 1,
-      name: "Necklace",
-      isReviewer: true,
-      address: address,
-      phone: "13800138000",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop&q=60",
-      description: "Senior reviewer focused on product quality control"
-    };
+  const mockFetchUserInfo = async (address: string): Promise<UserInfo | null | undefined> => {
+    // console.log("ctx:", ctx);
+    const userInfo = await ctx!.bitsflea!.getUser(address);
+    console.log("userInfo:", userInfo);
 
     // Save to localStorage
-    localStorage.setItem('userInfo', JSON.stringify(defaultReviewer));
-    return defaultReviewer;
+    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+    return userInfo;
   };
 
   const handleConnectWallet = async (walletType: 'nabox' | 'metamask') => {
-    // Simulate wallet connection
-    const mockAddress = '0x' + Array(40).fill(0).map(() => 
-      Math.floor(Math.random() * 16).toString(16)
-    ).join('');
+    if (walletType === 'nabox') {
+      if ('nabox' in window) {
+        const naboxInfo = await window.nabox!.createSession();
+        console.log("naboxInfo:", naboxInfo)
+        if (naboxInfo && naboxInfo.length > 0) {
+          setConnectedAddress(naboxInfo[0]);
+          try {
+            const userInfo = await mockFetchUserInfo(naboxInfo[0]);
 
-    setConnectedAddress(mockAddress);
-
-    try {
-      const userInfo = await mockFetchUserInfo(mockAddress);
-      
-      if (userInfo) {
-        // User exists, proceed with login
-        login(userInfo);
-        onSuccess();
+            if (userInfo) {
+              // User exists, proceed with login
+              login(userInfo);
+              onSuccess();
+            } else {
+              // User doesn't exist, show registration form
+              setShowRegister(true);
+            }
+          } catch (error) {
+            console.error('Error fetching user info:', error);
+          }
+        }
       } else {
-        // User doesn't exist, show registration form
-        setShowRegister(true);
+        console.error('Nabox not found');
+        window.open('https://chromewebstore.google.com/detail/nabox-wallet/nknhiehlklippafakaeklbeglecifhad', '_blank');
       }
-    } catch (error) {
-      console.error('Error fetching user info:', error);
+
     }
   };
 
-  const handleRegister = (data: any) => {
-    // Create new user
-    const newUser = {
-      id: Date.now(),
-      name: data.nickname,
-      isReviewer: true,
-      address: data.address,
-      phone: data.phone,
-      avatar: data.avatar,
-      description: data.description
-    };
+  const handleRegister = async (info: any) => {
+    console.log("info:", info)
+    //Create new user
+    const phoneHash = getHash(info.phone);
+    const phoneEncrypt = "";  //TODO: Encrypt phone number
+    const referrer = null;
+    const avatar = info.avatar.startsWith("http") ? info.avatar : (await addImages(ctx, [info.avatar]))[0];
+    const extendInfo = await addUserExtendInfo(ctx, { x: "", tg: info.tg, e: "", d: info.description });
 
-    // Save to localStorage
-    localStorage.setItem('userInfo', JSON.stringify(newUser));
-    
-    // Login
-    login(newUser);
-    onSuccess();
+    const data = {
+      from: connectedAddress,
+      value: 0,
+      contractAddress: config.contracts.Bitsflea,
+      methodName: "regUser",
+      methodDesc: "",
+      args: [info.nickname, phoneHash, phoneEncrypt, referrer, avatar, extendInfo],
+      multyAssetValues: []
+    }
+    const txHash = await window.nabox!.contractCall(data);
+    await ctx?.nuls?.waitingResult(txHash);
+
+    const newUser = await ctx?.bitsflea?.getUser(connectedAddress);
+    // console.log("newUser:", newUser);
+    if (newUser) {
+      // Login
+      login(newUser!);
+      onSuccess();
+    } else {
+      console.error('Failed to register user');
+    }
   };
 
   if (showRegister) {
@@ -129,7 +141,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
             </span>
           </button>
 
-          <button
+          {/* <button
             onClick={() => handleConnectWallet('metamask')}
             className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-4 rounded-xl flex items-center justify-between hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg shadow-orange-100 group"
           >
@@ -142,7 +154,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
             <span className="text-white/60 group-hover:translate-x-1 transition-transform">
               Popular
             </span>
-          </button>
+          </button> */}
 
           <p className="text-center text-sm text-gray-500 mt-6">
             By connecting a wallet, you agree to our{' '}

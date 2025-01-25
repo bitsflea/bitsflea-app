@@ -1,7 +1,7 @@
 import { Sparkles, Smartphone, Gamepad2, Sparkle, Home, Shirt, BookOpen } from 'lucide-react';
 
 export const categories = [
-    { name: 'Featured', icon: Sparkles, value: null },
+    { name: 'Featured', icon: Sparkles, value: undefined },
     { name: 'Electronics', icon: Smartphone, value: 1 },
     { name: 'Toys', icon: Gamepad2, value: 2 },
     { name: 'Beauty', icon: Sparkle, value: 3 },

@@ -13,6 +13,7 @@ interface RegisterData {
   description: string;
   avatar: string;
   address: string;
+  tg: string;
 }
 
 export const RegisterModal: React.FC<RegisterModalProps> = ({
@@ -24,8 +25,9 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
     phone: '',
     nickname: '',
     description: '',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop&q=60',
-    address: walletAddress
+    avatar: 'https://ix-marketing.imgix.net/genfill.png?auto=format,compress&w=3038',
+    address: walletAddress,
+    tg: ''
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,6 +124,24 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 onChange={(e) => setFormData(prev => ({ ...prev, nickname: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="请输入昵称"
+                required
+              />
+            </div>
+          </div>
+
+          {/* telegram */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Telegram
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                value={formData.tg}
+                onChange={(e) => setFormData(prev => ({ ...prev, tg: e.target.value }))}
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="请输入Telegram"
                 required
               />
             </div>

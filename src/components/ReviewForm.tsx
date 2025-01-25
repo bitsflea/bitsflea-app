@@ -3,9 +3,9 @@ import { X, CheckCircle, XCircle } from 'lucide-react';
 import { ProductInfo } from '../types';
 
 interface ReviewFormProps {
-  product: ProductInfo | null;
+  product: ProductInfo;
   onClose: () => void;
-  onSubmit: (productId: string | undefined, approved: boolean, reason: string) => void;
+  onSubmit: (productId: string, approved: boolean, reason: string) => void;
 }
 
 export const ReviewForm: React.FC<ReviewFormProps> = ({
@@ -19,7 +19,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (approved === null) return;
-    onSubmit(product?.id, approved, reason);
+    onSubmit(product.id, approved, reason);
   };
 
   return (

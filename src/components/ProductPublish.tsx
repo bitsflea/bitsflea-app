@@ -28,7 +28,7 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
     price: '',
     currency: currencies[0].label,
     shippingFee: '',
-    category: categories[0].name,
+    category: categories[1].value,
     images: [] as string[],
     location: {
       country: firstCountry,
@@ -175,11 +175,11 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
                 <select
                   id="category"
                   value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, category: Number(e.target.value) }))}
                   className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
-                  {categories.filter(v => v.value != null).map(({ name }) => (
-                    <option key={name} value={name}>
+                  {categories.filter(v => v.value != null).map(({ name,value }) => (
+                    <option key={name} value={value}>
                       {name}
                     </option>
                   ))}

@@ -1,3 +1,100 @@
+import { HeliaLibp2p } from "helia";
+import { Libp2p } from 'libp2p'
+import { Identify } from "@libp2p/identify"
+import type { KadDHT } from '@libp2p/kad-dht'
+import { PubSub } from '@libp2p/interface'
+import { NULSAPI } from "nuls-api-v2";
+import { unixfs } from "@helia/unixfs";
+import { GossipsubEvents } from "@chainsafe/libp2p-gossipsub";
+import jaysonPromiseBrowserClient from "jayson/promise/lib/client/browser";
+import BigNumber from "bignumber.js";
+
+export interface UserInfo {
+  /**
+     * 用户地址
+     */
+  uid: string;
+  /**
+   * 状态，值对应 UserStatus
+   */
+  status: number;
+  /**
+   * 是否是评审员
+   */
+  isReviewer: boolean;
+  /**
+   * 昵称
+   */
+  nickname: string;
+  /**
+   * 头像
+   */
+  head: string;
+  /**
+   * 电话号hash
+   */
+  phoneHash: string;
+  /**
+   * 加密过后的电话
+   */
+  phoneEncrypt: string;
+  /**
+   * 用户扩展信息,如社交账号等。CID
+   */
+  extendInfo: string;
+  /**
+   * 引荐人地址
+   */
+  referrer: string;
+  /**
+   * 信用分
+   */
+  creditValue: number;
+  /**
+   * 最后活跃时间
+   */
+  lastActiveTime: number;
+  /**
+   * 发布商品总数量
+   */
+  postsTotal: number;
+  /**
+   * 卖出商品总数量
+   */
+  sellTotal: number;
+  /**
+   * 买入商品总数量
+   */
+  buyTotal: number;
+  /**
+   * 引荐总数量
+   */
+  referralTotal: number;
+  /**
+   * 加密用公钥,为地址公钥
+   */
+  encryptKey: string;
+}
+
+export interface UserExtendInfo {
+  /**
+   * X账户名,原推特号
+   */
+  x: string;
+  /**
+   * telegram号
+   */
+  tg: string;
+  /**
+   * 电子邮件
+   */
+  e: string;
+  /**
+   * 自述
+   */
+  d: string;
+}
+
 export interface Coordinates {
   lat: number;
   lng: number;
@@ -133,4 +230,44 @@ export interface Order {
   delayedCount: string;
   clearTime: number;
   product: Product;
+}
+
+export interface Nabox {
+  createSession: () => Promise<any>;
+  contractCall: (data: any) => Promise<string>;
+}
+
+export interface BitsFlea {
+  getUser: (address: string) => Promise<UserInfo | null>
+  newProductId: (address: string) => Promise<BigNumber | null>
+  publish: (pid: string, category: number, description: string, isNew: boolean, isRetail: boolean, isReturns: boolean, position: string, saleMethod: number, stockCount: number, pickupMethod: number, postage: string, price: string) => Promise<string | null>;
+}
+
+export interface HeliaContextType {
+  helia: HeliaLibp2p<Libp2p<{
+    identify: Identify;
+    dcutr: unknown;
+    dht: KadDHT;
+    pubsub: PubSub<GossipsubEvents>;
+  }>> | null;
+  fs: ReturnType<typeof unixfs> | null;
+  nuls: NULSAPI | null;
+  loading: boolean;
+  error: unknown;
+  bitsflea: BitsFlea | null;
+  rpc: jaysonPromiseBrowserClient | null;
+}
+
+export interface Reviewer {
+  againstCount: number,
+  approveCount: number,
+  createTime: number,
+  lastActiveTime: number,
+  uid: string,
+  voted: string,
+  creditValue: number,
+  extendInfo: string,
+  head: string,
+  isReviewer: boolean,
+  nickname: string
 }

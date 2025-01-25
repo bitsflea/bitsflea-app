@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Camera, X } from 'lucide-react';
+import { ImageIPFS } from './ImageIPFS';
 
 interface ProfileEditorProps {
   onClose: () => void;
@@ -11,6 +12,7 @@ interface ProfileData {
   avatar: string;
   nickname: string;
   description: string;
+  tg: string;
 }
 
 export const ProfileEditor: React.FC<ProfileEditorProps> = ({
@@ -59,11 +61,9 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
           <div className="flex flex-col items-center gap-4">
             <div className="relative group">
               <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100">
-                <img
-                  src={previewImage || formData.avatar}
+                <ImageIPFS image={previewImage || formData.avatar} 
                   alt="Profile"
-                  className="w-full h-full object-cover"
-                />
+                  className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Camera className="h-8 w-8 text-white" />
                 </div>
@@ -90,6 +90,21 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
               onChange={(e) => setFormData(prev => ({ ...prev, nickname: e.target.value }))}
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Enter your nickname"
+            />
+          </div>
+
+          {/* telegram */}
+          <div className="space-y-2">
+            <label htmlFor="telegram" className="block text-sm font-medium text-gray-700">
+              Telegram
+            </label>
+            <input
+              type="text"
+              id="telegram"
+              value={formData.tg}
+              onChange={(e) => setFormData(prev => ({ ...prev, tg: e.target.value }))}
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Enter your telegram"
             />
           </div>
 
