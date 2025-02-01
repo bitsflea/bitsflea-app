@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Address } from '../types';
-import { LocationSelector } from './LocationSelector';
 import { LocationValue } from '../types';
-import { locationData } from '../data/locations';
+import { GoogleMapsLocationSelector } from './GoogleMapsLocationSelector';
 
 interface AddressEditorProps {
   onClose: () => void;
@@ -16,38 +15,24 @@ export const AddressEditor: React.FC<AddressEditorProps> = ({
   onSave,
   initialData
 }) => {
-  const firstCountry = Object.keys(locationData)[0];
-  const firstRegion = Object.keys(locationData[firstCountry].regions)[0];
-  const regionData = locationData[firstCountry].regions[firstRegion];
-  const firstDistrict = regionData.districts ? Object.keys(regionData.districts)[0] : undefined;
 
   const [formData, setFormData] = useState<Address>(initialData || {
     id: Date.now(),
     name: '',
     phone: '',
-    province: '',
-    city: '',
-    district: '',
+    location: {
+      country: "",
+      region: "",
+      coordinates: { lat: 0, lng: 0 }
+    },
     address: '',
     isDefault: false
   });
 
-  const [location, setLocation] = useState<LocationValue>({
-    country: firstCountry,
-    region: firstRegion,
-    district: firstDistrict,
-    coordinates: firstDistrict && regionData.districts 
-      ? regionData.districts[firstDistrict]
-      : regionData.coordinates
-  });
-
-  const handleLocationChange = (newLocation: LocationValue) => {
-    setLocation(newLocation);
+  const handleLocationChange = (location: LocationValue) => {
     setFormData(prev => ({
       ...prev,
-      province: locationData[newLocation.country].name,
-      city: locationData[newLocation.country].regions[newLocation.region].name,
-      district: newLocation.district || ''
+      location
     }));
   };
 
@@ -114,8 +99,8 @@ export const AddressEditor: React.FC<AddressEditorProps> = ({
             <label className="block text-sm font-medium text-gray-700">
               Region
             </label>
-            <LocationSelector
-              value={location}
+            <GoogleMapsLocationSelector
+              value={formData.location}
               onChange={handleLocationChange}
             />
           </div>

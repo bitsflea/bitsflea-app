@@ -12,6 +12,7 @@
   "dependencies": {
     "@chainsafe/libp2p-gossipsub": "^14.1.0",
     "@helia/unixfs": "^4.0.1",
+    "@orbitdb/core": "^2.4.3",
     "blockstore-idb": "^2.0.1",
     "helia": "^5.1.1",
     "it-drain": "^3.0.7",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@orbitdb/core-types": "^1.0.11",
     "@types/crypto-js": "^4.2.2",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",

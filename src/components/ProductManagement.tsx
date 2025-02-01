@@ -46,7 +46,9 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const data = await ctx.rpc!.request("getProducts", [page, ITEMS_PER_PAGE, activeFilter == 'all' ? null : activeFilter, user!.uid, -1]);
+      const params = [page, ITEMS_PER_PAGE, null, user!.uid, activeFilter == 'all' ? -1 : activeFilter]
+      // console.log("params:", params)
+      const data = await ctx.rpc!.request("getProducts", params);
       console.log("fetchProducts data:", data);
       if (data.result && data.result.length > 0) {
         setManagedProducts(data.result);
@@ -132,7 +134,7 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
         contractAddress: config.contracts.Bitsflea,
         methodName: "publish",
         methodDesc: "",
-        args: [pid!.toString(10), data.category, cid, false, true, true, position, 0, 1, 1, `${parseNULS(data.shippingFee, currency.decimals)},${currency.value}`, `${parseNULS(data.price, currency.decimals)},${currency.value}`],
+        args: [pid!.toString(10), data.category, cid, false, data.isRetail, true, position, 0, parseInt(data.stock), 1, `${parseNULS(data.shippingFee, currency.decimals)},${currency.value}`, `${parseNULS(data.price, currency.decimals)},${currency.value}`],
         multyAssetValues: []
       }
       console.log("callData:", callData);

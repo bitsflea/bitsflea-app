@@ -16,21 +16,19 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [localImages, setLocalImages] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchImages = async () => {
       setLoading(true)
-      if (!heliaContext || !heliaContext.fs || !images || images.length < 1) {
-        setLoading(false)
-        return
-      }
       const _localImages = await getImages(heliaContext, images)
       // console.log("_localImages:", _localImages)
       setLoading(false)
       setLocalImages(_localImages)
     }
-    fetchImages()
+    if (heliaContext && heliaContext!.fs) {
+        fetchImages()
+    }
   }, [images.length])
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Package, MapPin, Heart, Store, Shield, ChevronRight, Star, Pencil, ShoppingBag, Truck } from 'lucide-react';
+import { Package, MapPin, Heart, Store, Shield, Star, Pencil, ShoppingBag, Truck } from 'lucide-react';
 import { ProductManagement } from './ProductManagement';
 import { PurchaseManagement } from './PurchaseManagement';
 import { AddressManagement } from './AddressManagement';
@@ -8,8 +8,6 @@ import { FollowingManagement } from './FollowingManagement';
 import { ProfileEditor } from './ProfileEditor';
 import { useAuth } from '../context/AuthContext';
 import { orders } from '../data/orders';
-import { products } from '../data/products';
-import { shops } from '../data/shops';
 import { SalesManagement } from './SalesManagement';
 import { ImageIPFS } from './ImageIPFS';
 import { UserExtendInfo } from '../types';
@@ -55,7 +53,7 @@ export const UserCenter: React.FC = () => {
     showLoading()
     console.log('Profile updated:', data);
     try {
-      let eInfo = await getUserExtendInfo(ctx, user!.extendInfo, 5000);
+      let eInfo:any = await getUserExtendInfo(ctx, user!.extendInfo, 5000);
       console.log("eInfo:", eInfo);
       eInfo.d = data.description;
       eInfo.tg = data.tg;
@@ -131,40 +129,19 @@ export const UserCenter: React.FC = () => {
       case 'addresses':
         return (
           <AddressManagement
-            addresses={[
-              {
-                id: 1,
-                name: "张三",
-                phone: "13800138000",
-                province: "广东省",
-                city: "深圳市",
-                district: "南山区",
-                address: "科技园路1号",
-                isDefault: true
-              }
-            ]}
             onAddAddress={(address) => console.log('Add address:', address)}
             onEditAddress={(address) => console.log('Edit address:', address)}
-            onDeleteAddress={(id) => console.log('Delete address:', id)}
-            onSetDefault={(id) => console.log('Set default:', id)}
           />
         );
 
       case 'favorites':
         return (
-          <FavoriteManagement
-            products={products.slice(0, 3)}
-            onRemoveFavorite={(id) => console.log('Remove favorite:', id)}
-          />
+          <FavoriteManagement />
         );
 
       case 'following':
         return (
-          <FollowingManagement
-            shops={shops}
-            onViewShop={(id) => console.log('View shop:', id)}
-            onUnfollow={(id) => console.log('Unfollow shop:', id)}
-          />
+          <FollowingManagement />
         );
 
       default:

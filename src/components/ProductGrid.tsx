@@ -24,7 +24,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
     const getProducts = async () => {
       try {
         const data = await rpc!.request("getProducts", [page, ITEMS_PER_PAGE, activeCategory, null]);
-        console.log("data:", data);
+        // console.log("data:", data);
         setDisplayedProducts(data.result);
         setPage(1);
         setHasMore(data.result.length > ITEMS_PER_PAGE);

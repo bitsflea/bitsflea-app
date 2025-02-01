@@ -1,40 +1,87 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, MapPin, Settings, Star, Trash2 } from 'lucide-react';
 import { Address } from '../types';
 import { AddressEditor } from './AddressEditor';
+import { useHelia } from '../context/HeliaContext';
+import { getAddresses, setAddresses } from '../utils/db';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 interface AddressManagementProps {
-  addresses: Address[];
   onAddAddress: (address: Address) => void;
   onEditAddress: (address: Address) => void;
-  onDeleteAddress: (id: number) => void;
-  onSetDefault: (id: number) => void;
 }
 
 export const AddressManagement: React.FC<AddressManagementProps> = ({
-  addresses,
   onAddAddress,
   onEditAddress,
-  onDeleteAddress,
-  onSetDefault,
 }) => {
   const [showEditor, setShowEditor] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | undefined>();
+  const [addresses, setAddress] = useState<Address[]>([])
+  const { user } = useAuth()
+  const { userDB } = useHelia()
+  const { showToast } = useToast();
 
   const handleEdit = (address: Address) => {
     setEditingAddress(address);
     setShowEditor(true);
   };
 
-  const handleSave = (address: Address) => {
+  useEffect(() => {
+    const loadAddress = async () => {
+      try {
+        let data = await getAddresses(userDB, user!.uid)
+        // console.log("data:", data)
+        if (data) {
+          setAddress(data)
+        }
+      } catch (e: any) {
+        if ("message" in e) {
+          showToast("error", e.message);
+        } else {
+          console.log("loadAddress:", e);
+        }
+      }
+    }
+    loadAddress()
+  }, [])
+
+  const handleSave = async (address: Address) => {
     if (editingAddress) {
       onEditAddress(address);
+      let index = addresses.findIndex((v) => v.id === address.id)
+      addresses[index] = address
+      await setAddresses(userDB, user!.uid, addresses)
+      setAddress([...addresses])
     } else {
       onAddAddress(address);
+      let data = [...addresses, address]
+      await setAddresses(userDB, user!.uid, data)
+      setAddress(data)
     }
     setShowEditor(false);
     setEditingAddress(undefined);
   };
+
+  const onDeleteAddress = async (id: number) => {
+    let index = addresses.findIndex((v) => v.id === id)
+    addresses.splice(index, 1)
+    await setAddresses(userDB, user!.uid, addresses)
+    setAddress([...addresses])
+  }
+
+  const onSetDefault = async (id: number) => {
+    addresses.forEach((v) => {
+      if (v.id === id) {
+        v.isDefault = true
+      } else {
+        v.isDefault = false
+      }
+    })
+    await setAddresses(userDB, user!.uid, addresses)
+    setAddress([...addresses])
+  }
 
   return (
     <div className="space-y-6">
@@ -75,7 +122,7 @@ export const AddressManagement: React.FC<AddressManagementProps> = ({
                       )}
                     </div>
                     <p className="text-xs sm:text-sm text-gray-600 mb-0.5">
-                      {address.province} {address.city} {address.district}
+                      {address.location.country} {address.location.region} {address.location.district}
                     </p>
                     <p className="text-xs sm:text-sm text-gray-600">{address.address}</p>
                   </div>

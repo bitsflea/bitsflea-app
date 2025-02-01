@@ -152,13 +152,13 @@ export interface CartItem extends Product {
 }
 
 export interface Shop {
-  id: number;
+  id: string;
   name: string;
   avatar: string;
   description: string;
-  joinDate: string;
+  lastActiveTime: number;
   productCount: number;
-  followerCount: number;
+  sellCount: number;
   rating: number;
 }
 
@@ -166,9 +166,7 @@ export interface Address {
   id: number;
   name: string;
   phone: string;
-  province: string;
-  city: string;
-  district: string;
+  location: LocationValue;
   address: string;
   isDefault: boolean;
 }
@@ -235,6 +233,8 @@ export interface Order {
 export interface Nabox {
   createSession: () => Promise<any>;
   contractCall: (data: any) => Promise<string>;
+  decryptData: (data: any) => Promise<any>;
+  getPub: (data: any) => Promise<any>;
 }
 
 export interface BitsFlea {
@@ -256,6 +256,7 @@ export interface HeliaContextType {
   error: unknown;
   bitsflea: BitsFlea | null;
   rpc: jaysonPromiseBrowserClient | null;
+  userDB: any
 }
 
 export interface Reviewer {

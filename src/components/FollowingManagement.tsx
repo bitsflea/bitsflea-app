@@ -1,24 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Store } from 'lucide-react';
-import { Shop } from '../types';
 import { ShopCard } from './ShopCard';
-import { shops as mockShops } from '../data/shops';
+import { Shop } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { useHelia } from '../context/HeliaContext';
+import { delFollowing, getUserData, KEY_FOLLOWING } from '../utils/db';
 
-interface FollowingManagementProps {
-  shops?: Shop[];
-  onViewShop: (shopId: number) => void;
-  onUnfollow?: (shopId: number) => void;
-}
 
-export const FollowingManagement: React.FC<FollowingManagementProps> = ({
-  shops = mockShops,
-  onViewShop,
-  onUnfollow
+export const FollowingManagement: React.FC = ({
 }) => {
+  const { user } = useAuth()
+  const { userDB, rpc } = useHelia()
+  const [shops, setShops] = useState<Shop[]>([])
+
+  useEffect(() => {
+    const loadFollowing = async () => {
+      const ids = await getUserData(userDB, user!.uid, KEY_FOLLOWING)
+      if (ids.length > 0) {
+        // console.log("ids:", ids)
+        const data = await rpc!.request("getUsersByIds", [ids]);
+        // console.log("data:", data)
+        const _shops = data.result.map((v: any) => {
+          return {
+            id: v.uid,
+            name: v.nickname,
+            avatar: v.head,
+            description: v.extendInfo,
+            lastActiveTime: v.lastActiveTime,
+            productCount: v.postsTotal,
+            sellCount: v.sellTotal,
+            rating: v.creditValue
+          } as Shop
+        })
+        setShops(_shops)
+      }
+    }
+    if (user && rpc) {
+      loadFollowing()
+    }
+  }, [user])
+
+  const onViewShop = async (shopId: string) => {
+    console.log("shopId:", shopId)
+  }
+
+  const onUnfollow = async (shopId: string) => {
+    const index = shops.findIndex((v) => v.id === shopId)
+    if (index > -1) {
+      shops.splice(index, 1)
+      setShops([...shops])
+      if (user && userDB) {
+        await delFollowing(userDB, user.uid, shopId)
+      }
+    }
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">Following</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {shops.length > 0 ? (
           shops.map((shop) => (

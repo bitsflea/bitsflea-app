@@ -1,5 +1,6 @@
 export default {
-    apiRPC: "http://localhost:3000",
+    apiRPC: "https://api.bitsflea.com",
+    // apiRPC: "http://localhost:3000",
     chainAPI: "http://localhost:5173/api",
     contracts: {
         Bitsflea: "tNULSeBaN666jUUFtq1vkWUbfPPuq8iTgzsNn2"

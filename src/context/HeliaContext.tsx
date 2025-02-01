@@ -25,6 +25,8 @@ import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import drain from 'it-drain'
 import { getClient } from '../utils/client';
 import jaysonPromiseBrowserClient from "jayson/promise/lib/client/browser";
+// @ts-ignore
+import { createOrbitDB } from '@orbitdb/core';
 
 
 async function initPriKey() {
@@ -98,12 +100,13 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         dcutr: unknown;
         dht: KadDHT;
         pubsub: PubSub<GossipsubEvents>;
-    }>> | null>(null);
-    const [fs, setFs] = useState<ReturnType<typeof unixfs> | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<unknown>(null);
-    const [bitsflea, setBitsflea] = useState<BitsFlea | null>(null);
-    const [rpc, setRpc] = useState<jaysonPromiseBrowserClient | null>(null);
+    }>> | null>(null)
+    const [fs, setFs] = useState<ReturnType<typeof unixfs> | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<unknown>(null)
+    const [bitsflea, setBitsflea] = useState<BitsFlea | null>(null)
+    const [rpc, setRpc] = useState<jaysonPromiseBrowserClient | null>(null)
+    const [userDB, setUserDB] = useState(null)
 
     const onPin = (evt: any) => {
         console.log("onPin:", evt)
@@ -160,26 +163,31 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     console.log(`Connected to peer: ${peerId}`)
                 })
 
-                const blockstore = new IDBBlockstore(`bitsflea-node-${uid}`);
+                const blockstore = new IDBBlockstore(`bitsflea-node-${uid}`)
                 await blockstore.open();
 
                 // 初始化 Helia 和 UnixFS
-                const heliaInstance = await createHelia({ libp2p, blockstore });
+                const heliaInstance = await createHelia({ libp2p, blockstore })
 
-                const fsInstance = unixfs(heliaInstance);
+                const fsInstance = unixfs(heliaInstance)
 
-                heliaInstance.libp2p.services.pubsub.subscribe(config.topic_file);
+                heliaInstance.libp2p.services.pubsub.subscribe(config.topic_file)
+
+                // 初始化数据库
+                const orbitdb = await createOrbitDB({ ipfs: heliaInstance, id: uid, directory: `bitsflea-user-data` })
+                const userDB = await orbitdb.open("/orbitdb/zdpuAsJkrPQ9yVYVVGzAz4aeaCxLvxYL7xdrEED6HwU8inNEV")
 
 
                 // 初始化 Bitsflea 合约
-                const bitsfleaInstance = await nulsInstance.contract(config.contracts.Bitsflea);
+                const bitsfleaInstance = await nulsInstance.contract(config.contracts.Bitsflea)
                 // console.log("bitsfleaInstance:", bitsfleaInstance);
 
-                setHelia(heliaInstance);
-                setFs(fsInstance);
-                setBitsflea(bitsfleaInstance);
+                setUserDB(userDB)
+                setHelia(heliaInstance)
+                setFs(fsInstance)
+                setBitsflea(bitsfleaInstance)
             } catch (err) {
-                console.error('Failed to initialize Helia:', err);
+                console.error('Failed to initialize Helia:', err)
                 setError(err);
             } finally {
                 setLoading(false);
@@ -190,7 +198,7 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, []);
 
     return (
-        <HeliaContext.Provider value={{ helia, fs, loading, error, nuls, bitsflea, rpc }}>
+        <HeliaContext.Provider value={{ helia, fs, loading, error, nuls, bitsflea, rpc, userDB }}>
             {children}
         </HeliaContext.Provider>
     );

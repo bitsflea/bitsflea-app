@@ -1,9 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { X, Upload, Plus, Trash2 } from 'lucide-react';
 import { categories } from '../data/categories';
-import { LocationSelector } from './LocationSelector';
 import { LocationValue, ProductStatus } from '../types';
-import { locationData } from '../data/locations';
+import { GoogleMapsLocationSelector } from './GoogleMapsLocationSelector';
 import config from '../data/config';
 // import { addImages } from '../utils/ipfs';
 // import { useHelia } from '../context/HeliaContext';
@@ -16,11 +15,7 @@ interface ProductPublishProps {
 const currencies = config.currencies;
 
 export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPublish }) => {
-  const firstCountry = Object.keys(locationData)[0];
-  const firstRegion = Object.keys(locationData[firstCountry].regions)[0];
-  const regionData = locationData[firstCountry].regions[firstRegion];
-  const firstDistrict = regionData.districts ? Object.keys(regionData.districts)[0] : undefined;
-  // const ctx = useHelia();
+  const firstCountry = 'JP';
 
   const [formData, setFormData] = useState({
     name: '',
@@ -30,13 +25,16 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
     shippingFee: '',
     category: categories[1].value,
     images: [] as string[],
+    stock: "1",
+    isRetail: false,
     location: {
       country: firstCountry,
-      region: firstRegion,
-      district: firstDistrict,
-      coordinates: firstDistrict && regionData.districts
-        ? regionData.districts[firstDistrict]
-        : regionData.coordinates
+      region: '',
+      district: '',
+      coordinates: {
+        lat: 0,
+        lng: 0
+      }
     } as LocationValue
   });
 
@@ -187,42 +185,27 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
               </div>
 
               {/* Price with Currency */}
-              <div>
-                <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                  Price
-                </label>
-                <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-1">
+                  <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+                    Price
+                  </label>
                   <input
                     type="number"
                     id="price"
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    className="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="0.00"
                     min="0"
                     step="0.000001"
                     required
                   />
-                  <select
-                    value={formData.currency}
-                    onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value }))}
-                    className="w-24 px-2 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-gray-50"
-                  >
-                    {currencies.map(({ value, label }) => (
-                      <option key={value} value={label}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
                 </div>
-              </div>
-
-              {/* Shipping Fee */}
-              <div>
-                <label htmlFor="shippingFee" className="block text-sm font-medium text-gray-700 mb-1">
-                  Shipping Fee
-                </label>
-                <div className="flex gap-2">
+                <div className="col-span-1">
+                  <label htmlFor="shippingFee" className="block text-sm font-medium text-gray-700 mb-1">
+                    Shipping Fee
+                  </label>
                   <input
                     type="number"
                     id="shippingFee"
@@ -234,8 +217,66 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
                     step="0.000001"
                     required
                   />
-                  <div className="w-24 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 text-center">
-                    {formData.currency}
+                </div>
+                <div className="col-span-1">
+                  <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">
+                    Currency
+                  </label>
+                  <select
+                    id="currency"
+                    value={formData.currency}
+                    onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value }))}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-gray-50"
+                  >
+                    {currencies.map(({ value, label }) => (
+                      <option key={value} value={label}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Stock and Retail Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
+                    Stock
+                  </label>
+                  <input
+                    type="number"
+                    id="stock"
+                    value={formData.stock}
+                    onChange={(e) => setFormData(prev => ({ ...prev, stock: e.target.value }))}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Enter stock quantity"
+                    min="0"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Retail Option
+                  </label>
+                  <div className="flex items-center gap-4 h-[42px]">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={formData.isRetail}
+                        onChange={() => setFormData(prev => ({ ...prev, isRetail: true }))}
+                        className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                      />
+                      <span className="text-gray-700">Retail</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={!formData.isRetail}
+                        onChange={() => setFormData(prev => ({ ...prev, isRetail: false }))}
+                        className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                      />
+                      <span className="text-gray-700">Wholesale</span>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -260,7 +301,7 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
           {/* Location Selector */}
           <div className="space-y-4 mt-6">
             <h3 className="text-lg font-medium text-gray-900">Shipping Location</h3>
-            <LocationSelector
+            <GoogleMapsLocationSelector
               value={formData.location}
               onChange={handleLocationChange}
             />

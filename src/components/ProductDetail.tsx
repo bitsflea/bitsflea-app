@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { X, ShoppingBag, Star, Truck, Shield, ArrowRight, MessageCircle, XCircle, ClipboardCheck, Heart, UserPlus } from 'lucide-react';
 import { Product, ProductInfo, ProductStatus, UserExtendInfo } from '../types';
 import { ImageCarousel } from './ImageCarousel';
-import { Chat } from './Chat';
+// import { Chat } from './Chat';
 import { ReviewForm } from './ReviewForm';
 import { getCategoryByValue } from '../data/categories';
 import { defaultProductInfo, getProductInfo, getUserExtendInfo } from '../utils/ipfs';
 import { useHelia } from '../context/HeliaContext';
 import { useToast } from '../context/ToastContext';
+import { addFavorite, addFollowing, delFavorite, delFollowing, hasFavorite, hasFollowing } from '../utils/db';
+import { useAuth } from '../context/AuthContext';
 
 interface ProductDetailProps {
   product: Product;
@@ -28,10 +30,12 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   onDelist,
   onReview
 }) => {
-  const [showChat, setShowChat] = useState(false);
+  // const [showChat, setShowChat] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const { user } = useAuth()
+  const { userDB } = useHelia()
   const ctx = useHelia();
   const { showToast } = useToast();
   const [userExtendInfo, setUserExtendInfo] = useState<UserExtendInfo>({ x: "", tg: "", e: "", d: "" });
@@ -66,6 +70,21 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     fetchUserExtendInfo();
   }, [product.uid])
 
+  useEffect(() => {
+    const loadFavorite = async () => {
+      const result = await Promise.all([
+        hasFavorite(userDB, user!.uid, product.pid),
+        hasFollowing(userDB, user!.uid, product.uid)
+      ])
+      setIsFavorite(result[0])
+      setIsFollowing(result[1])
+    }
+    if (user) {
+      loadFavorite()
+    }
+
+  }, [product.pid])
+
   const features = [
     { icon: Star, text: "Verified Seller" },
     { icon: Truck, text: "Secure Delivery" },
@@ -96,16 +115,28 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     }
   };
 
-  const handleToggleFavorite = (e: React.MouseEvent) => {
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsFavorite(!isFavorite);
-    // TODO: Implement favorite functionality
+    if (user) {
+      if (!isFavorite) {
+        await addFavorite(userDB, user.uid, product.pid)
+      } else {
+        await delFavorite(userDB, user.uid, product.pid)
+      }
+    }
   };
 
-  const handleToggleFollow = (e: React.MouseEvent) => {
+  const handleToggleFollow = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsFollowing(!isFollowing);
-    // TODO: Implement follow functionality
+    if (user) {
+      if (!isFollowing) {
+        await addFollowing(userDB, user.uid, product.uid)
+      } else {
+        await delFollowing(userDB, user.uid, product.uid)
+      }
+    }
   };
 
   const openTelegram = (name: string) => {
