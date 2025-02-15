@@ -134,7 +134,7 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
         contractAddress: config.contracts.Bitsflea,
         methodName: "publish",
         methodDesc: "",
-        args: [pid!.toString(10), data.category, cid, false, data.isRetail, true, position, 0, parseInt(data.stock), 1, `${parseNULS(data.shippingFee, currency.decimals)},${currency.value}`, `${parseNULS(data.price, currency.decimals)},${currency.value}`],
+        args: [pid!.toString(10), data.category, data.name, cid, false, data.isRetail, true, position, 0, parseInt(data.stock), 1, `${parseNULS(data.shippingFee, currency.decimals)},${currency.value}`, `${parseNULS(data.price, currency.decimals)},${currency.value}`],
         multyAssetValues: []
       }
       console.log("callData:", callData);

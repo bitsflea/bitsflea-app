@@ -6,6 +6,10 @@ import { AlertCircle, CheckCircle2, Clock, Lock, XCircle } from 'lucide-react';
 import { defaultProductInfo, getProductInfo } from '../utils/ipfs';
 import { useHelia } from '../context/HeliaContext';
 import { useToast } from '../context/ToastContext';
+import { QuantityDialog } from './QuantityDialog';
+import { useLoading } from '../context/LoadingContext';
+import { useAuth } from '../context/AuthContext';
+import config from '../data/config';
 
 interface ProductCardProps {
   product: Product;
@@ -81,6 +85,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [productInfo, setProductInfo] = useState<ProductInfo>(defaultProductInfo);
   const ctx = useHelia();
   const { showToast } = useToast();
+  const [showQuantity, setShowQuantity] = useState(false);
+  const { showLoading, hideLoading } = useLoading();
+  const { user } = useAuth();
 
   useEffect(() => {
     const loadProductInfo = async () => {
@@ -115,11 +122,53 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     try {
       // TODO: Implement NaBox wallet integration
       console.log('Buying product:', product);
-      alert('NaBox wallet integration coming soon!');
+      if (product.isRetail && product.stockCount > 1) {
+        setShowQuantity(true);
+      } else {
+        await onConfirm(product.stockCount);
+      }
     } catch (error) {
       console.error('Error processing purchase:', error);
     }
   };
+
+  const onConfirm = async (quantity: number) => {
+    setShowQuantity(false);
+    console.log("quantity:", quantity)
+    showLoading()
+    const orderId = await ctx.bitsflea!.newOrderId(user!.uid, product.pid);
+    console.log("orderId:", orderId);
+    if (!orderId) {
+      showToast("error", "Failed to obtain order ID");
+      hideLoading();
+      return;
+    }
+    try {
+      const callData = {
+        from: user!.uid,
+        value: 0,
+        contractAddress: config.contracts.Bitsflea,
+        methodName: "placeOrder",
+        methodDesc: "",
+        args: [orderId.toString(10), quantity],
+        multyAssetValues: []
+      }
+      console.log("callData:", callData);
+      const txHash = await window.nabox!.contractCall(callData);
+      await ctx?.nuls?.waitingResult(txHash);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        showToast("error", e.message)
+      } else {
+        console.error("Unknown error");
+      }
+    }
+    hideLoading()
+  }
+
+  const onQuantityClose = () => {
+    setShowQuantity(false);
+  }
 
   const handleDelist = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -189,6 +238,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           onReview={onReview}
         />
       )}
+
+      {/* QuantityDialog */}
+      {showQuantity &&
+        (
+          <QuantityDialog price={product.price} maxValue={product.stockCount} onConfirm={onConfirm} onClose={onQuantityClose} />
+        )
+      }
     </>
   );
 };

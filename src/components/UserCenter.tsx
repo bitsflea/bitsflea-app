@@ -7,7 +7,6 @@ import { FavoriteManagement } from './FavoriteManagement';
 import { FollowingManagement } from './FollowingManagement';
 import { ProfileEditor } from './ProfileEditor';
 import { useAuth } from '../context/AuthContext';
-import { orders } from '../data/orders';
 import { SalesManagement } from './SalesManagement';
 import { ImageIPFS } from './ImageIPFS';
 import { UserExtendInfo } from '../types';
@@ -106,7 +105,7 @@ export const UserCenter: React.FC = () => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900">Purchases</h2>
-            <PurchaseManagement orders={orders} />
+            <PurchaseManagement />
           </div>
         );
 
@@ -114,7 +113,7 @@ export const UserCenter: React.FC = () => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900">Sales</h2>
-            <SalesManagement orders={orders} />
+            <SalesManagement />
           </div>
         );
 

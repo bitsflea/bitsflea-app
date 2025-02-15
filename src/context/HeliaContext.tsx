@@ -27,6 +27,7 @@ import { getClient } from '../utils/client';
 import jaysonPromiseBrowserClient from "jayson/promise/lib/client/browser";
 // @ts-ignore
 import { createOrbitDB } from '@orbitdb/core';
+import { json as Json, type JSON as HJSON } from '@helia/json'
 
 
 async function initPriKey() {
@@ -73,14 +74,12 @@ function createOption(pri: any) {
         peerDiscovery: [
             bootstrap({
                 list: [
-                    // "/ip4/192.168.0.105/tcp/61713/ws/p2p/12D3KooWT36TURqwnygqydMHCT4fFeHdGibgW7EwcWGaj9CEnk3h",
                     "/dns4/wss.bitsflea.com/tcp/443/wss/p2p/12D3KooWT36TURqwnygqydMHCT4fFeHdGibgW7EwcWGaj9CEnk3h",
-                    '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ',
                     '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
                     '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
-                    '/dnsaddr/bootstrap.libp2p.io/p2p/QmZa1sAxajnQjVM8WjWXoMbmPd7NsWhfKsPkErzpm9wGkp',
-                    '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
                     '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
+                    '/dnsaddr/va1.bootstrap.libp2p.io/p2p/12D3KooWKnDdG3iXw9eTFijk3EWSunZcFi54Zka4wmtqtt6rPxc8',
+                    '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ'
                 ],
             })
         ],
@@ -107,6 +106,7 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [bitsflea, setBitsflea] = useState<BitsFlea | null>(null)
     const [rpc, setRpc] = useState<jaysonPromiseBrowserClient | null>(null)
     const [userDB, setUserDB] = useState(null)
+    const [json, setJson] = useState<HJSON | null>(null)
 
     const onPin = (evt: any) => {
         console.log("onPin:", evt)
@@ -170,6 +170,7 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 const heliaInstance = await createHelia({ libp2p, blockstore })
 
                 const fsInstance = unixfs(heliaInstance)
+                const jsonInstance = Json(heliaInstance)
 
                 heliaInstance.libp2p.services.pubsub.subscribe(config.topic_file)
 
@@ -185,6 +186,7 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 setUserDB(userDB)
                 setHelia(heliaInstance)
                 setFs(fsInstance)
+                setJson(jsonInstance)
                 setBitsflea(bitsfleaInstance)
             } catch (err) {
                 console.error('Failed to initialize Helia:', err)
@@ -198,7 +200,7 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, []);
 
     return (
-        <HeliaContext.Provider value={{ helia, fs, loading, error, nuls, bitsflea, rpc, userDB }}>
+        <HeliaContext.Provider value={{ helia, fs, loading, error, nuls, bitsflea, rpc, userDB, json }}>
             {children}
         </HeliaContext.Provider>
     );

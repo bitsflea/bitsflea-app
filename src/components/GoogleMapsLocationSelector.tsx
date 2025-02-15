@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { LocationValue } from '../types';
 import { MapPin } from 'lucide-react';
+import { b64uDec } from '../utils/tools';
+import config from '../data/config';
 
 declare global {
     interface Window {
@@ -16,7 +18,7 @@ interface GoogleMapsLocationSelectorProps {
 }
 
 // Google Maps API Key
-const GOOGLE_MAPS_API_KEY = 'AIzaSyAz-agI3I-jQJcRkIINaOUTjxb6WCec_Po';
+const GOOGLE_MAPS_API_KEY = b64uDec(config.googleAPIKey);
 
 let googleMapsScriptLoaded = false;
 

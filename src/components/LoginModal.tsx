@@ -47,6 +47,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
           setConnectedAddress(naboxInfo[0]);
           try {
             const userInfo = await mockFetchUserInfo(naboxInfo[0]);
+            console.log("userInfo:",userInfo)
 
             if (userInfo) {
               // User exists, proceed with login

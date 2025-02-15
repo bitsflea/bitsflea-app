@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ProductCard } from './ProductCard';
-import { Loader2 } from 'lucide-react';
 import { Product } from '../types';
 import { useHelia } from '../context/HeliaContext';
 import { useToast } from '../context/ToastContext';
+import { InfiniteScroll } from './InfiniteScroll';
 
 interface ProductGridProps {
   activeCategory: number | null;
@@ -16,7 +16,6 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const loaderRef = useRef<HTMLDivElement>(null);
   const { rpc } = useHelia();
   const { showToast } = useToast();
 
@@ -32,7 +31,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
         if (e instanceof Error) {
           showToast("error", e.message);
         } else {
-          console.log("getProducts:",e);
+          console.log("getProducts:", e);
         }
       }
 
@@ -41,29 +40,6 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
       getProducts();
     }
   }, [activeCategory, rpc]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const first = entries[0];
-        if (first.isIntersecting && hasMore && !loading) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentLoader = loaderRef.current;
-    if (currentLoader) {
-      observer.observe(currentLoader);
-    }
-
-    return () => {
-      if (currentLoader) {
-        observer.unobserve(currentLoader);
-      }
-    };
-  }, [hasMore, loading, page, activeCategory]);
 
   const loadMore = async () => {
     setLoading(true);
@@ -91,22 +67,17 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <InfiniteScroll
+      loading={loading}
+      hasMore={hasMore}
+      onLoadMore={loadMore}
+      className="space-y-6"
+    >
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {displayedProducts.map(product => (
           <ProductCard key={product.pid} product={product} />
         ))}
       </div>
-
-      {/* Loader */}
-      <div ref={loaderRef} className="py-4 flex justify-center">
-        {loading && (
-          <div className="flex items-center gap-2 text-gray-500">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <span>Loading more products...</span>
-          </div>
-        )}
-      </div>
-    </div>
+    </InfiniteScroll>
   );
 };

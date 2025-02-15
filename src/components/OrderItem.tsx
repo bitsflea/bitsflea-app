@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { CreditCard, Package2, Truck, RotateCcw, CheckCircle2, XCircle, AlertTriangle, Scale, Clock } from 'lucide-react';
-import { Order, OrderStatus } from '../types';
+import { Order, OrderStatus, ProductInfo } from '../types';
 import { formatDate } from '../utils/date';
+import { useHelia } from '../context/HeliaContext';
+import { getProductInfo } from '../utils/ipfs';
+import { getAsset, showOrderId } from '../utils/nuls';
 
 interface OrderItemProps {
   order: Order;
@@ -80,16 +83,40 @@ const OrderStatusBadge: React.FC<{ status: OrderStatus }> = ({ status }) => {
 };
 
 export const OrderItem: React.FC<OrderItemProps> = ({ order, onClick }) => {
+  const { bitsflea } = useHelia();
+  const ctx = useHelia();
+
+  const [productInfo, setProductInfo] = useState<ProductInfo | null>(null);
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      const data = await bitsflea!.getProduct(order.pid);
+      console.log("data:", data);
+      if (data) {
+        order.product = data;
+        const info = await getProductInfo(ctx, data, 5000);
+        console.log("info:", info);
+        if (info) {
+          order.product.info = info;
+          setProductInfo(info);
+        }
+      }
+    };
+    if (bitsflea) {
+      loadProduct();
+    }
+  }, [order.pid])
+
   return (
-    <div 
+    <div
       onClick={onClick}
       className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
     >
       <div className="p-4">
         {/* Order Header */}
         <div className="flex items-center justify-between mb-4">
-          <div className="text-sm text-gray-500">
-            Order ID: {order.oid}
+          <div className="text-sm text-gray-500" title={order.oid}>
+            Order ID: {showOrderId(order.oid)}
           </div>
           <OrderStatusBadge status={order.status} />
         </div>
@@ -97,17 +124,17 @@ export const OrderItem: React.FC<OrderItemProps> = ({ order, onClick }) => {
         {/* Product Info */}
         <div className="flex gap-4">
           <img
-            src={order.product.images[0]}
-            alt={order.product.name}
+            src={productInfo?.images[0]}
+            alt={productInfo?.name}
             className="w-20 h-20 object-cover rounded-lg"
           />
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-medium text-gray-900 mb-1 line-clamp-2">
-              {order.product.name}
+              {productInfo?.name}
             </h3>
             <div className="flex items-baseline gap-2">
               <span className="text-lg font-semibold text-primary-600">
-                ${order.amount}
+                ${getAsset(order.amount)}
               </span>
               {Number(order.postage) > 0 && (
                 <span className="text-sm text-gray-500">

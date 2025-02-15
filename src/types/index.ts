@@ -8,6 +8,7 @@ import { unixfs } from "@helia/unixfs";
 import { GossipsubEvents } from "@chainsafe/libp2p-gossipsub";
 import jaysonPromiseBrowserClient from "jayson/promise/lib/client/browser";
 import BigNumber from "bignumber.js";
+import { type JSON as HJSON } from '@helia/json'
 
 export interface UserInfo {
   /**
@@ -135,6 +136,7 @@ export interface Product {
   status: number;
   stockCount: number;
   uid: string;
+  info: ProductInfo;
 }
 
 export interface ProductInfo {
@@ -240,7 +242,9 @@ export interface Nabox {
 export interface BitsFlea {
   getUser: (address: string) => Promise<UserInfo | null>
   newProductId: (address: string) => Promise<BigNumber | null>
-  publish: (pid: string, category: number, description: string, isNew: boolean, isRetail: boolean, isReturns: boolean, position: string, saleMethod: number, stockCount: number, pickupMethod: number, postage: string, price: string) => Promise<string | null>;
+  newOrderId: (address: string, pid: string) => Promise<BigNumber | null>
+  getProduct: (pid: string) => Promise<Product | null>
+  getProductReturn: (oid: string) => Promise<ProductReturn | null>
 }
 
 export interface HeliaContextType {
@@ -256,7 +260,8 @@ export interface HeliaContextType {
   error: unknown;
   bitsflea: BitsFlea | null;
   rpc: jaysonPromiseBrowserClient | null;
-  userDB: any
+  userDB: any;
+  json: HJSON | null;
 }
 
 export interface Reviewer {
@@ -271,4 +276,63 @@ export interface Reviewer {
   head: string,
   isReviewer: boolean,
   nickname: string
+}
+
+export interface Price {
+  value: number,
+  assetId: string,
+  symbol: string,
+  decimals: number
+}
+
+export interface ProductReturn {
+  /**
+   * 订单id
+   */
+  oid: string,
+  /**
+   * 商品
+   */
+  pid: string,
+
+  /**
+   * 状态,值对应 ReturnStatus
+   */
+  status: number,
+  /**
+   * 退货原因
+   */
+  reasons: string,
+  /**
+   * 物流单号
+   */
+  shipmentsNumber: string,
+  /**
+   * 创建时间
+   */
+  createTime: number,
+  /**
+   * 发货时间
+   */
+  shipTime: number,
+  /**
+   * 发货超时时间
+   */
+  shipTimeOut: number,
+  /**
+   * 收货时间
+   */
+  receiptTime: number,
+  /**
+   * 收货超时时间
+   */
+  receiptTimeOut: number,
+  /**
+   * 完成时间
+   */
+  endTime: number,
+  /**
+   * 延期收货次数
+   */
+  delayedCount: number
 }

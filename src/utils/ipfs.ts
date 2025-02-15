@@ -23,27 +23,22 @@ export const defaultProductInfo: ProductInfo = {
  */
 export async function getProductInfo(ctx: HeliaContextType | null, product: Product, timeout?: number): Promise<ProductInfo> {
     // console.log("product:", product);
-    const price = await getAsset(ctx, product.price);
-    if (!ctx || !ctx.fs) {
+    const price = getAsset(product.price);
+    if (!ctx || !ctx.helia) {
         return Object.assign(defaultProductInfo, { id: product.pid, price: price });
     }
     try {
         const { signal } = new TimeoutController(timeout || DefaultTimeout)
         const cid = CID.parse(product.description);
-        const chunks: Uint8Array[] = [];
-        for await (const chunk of ctx.fs.cat(cid, { signal })) {
-            chunks.push(chunk);
-        }
-        const isPin = await ctx.helia?.pins.isPinned(cid);
+        const isPin = await ctx.helia.pins.isPinned(cid);
         if (!isPin) {
-            const pinResult = ctx.helia?.pins.add(cid)
+            const pinResult = ctx.helia.pins.add(cid)
             if (pinResult) {
                 await drain(pinResult)
             }
         }
-        await ctx.helia!.libp2p.services.pubsub.publish(config.topic_file, new TextEncoder().encode(cid.toString()))
-        const jsonString = new TextDecoder().decode(chunks.reduce((a, b) => Uint8Array.from([...a, ...b])))
-        let obj = JSON.parse(jsonString);
+        await ctx.helia.libp2p.services.pubsub.publish(config.topic_file, new TextEncoder().encode(cid.toString()))
+        let obj: any = await ctx.json!.get(cid, { signal })
         if (("shipping" in obj) === false) {
             obj = Object.assign(obj, { shipping: defaultProductInfo.shipping });
         }
@@ -54,7 +49,7 @@ export async function getProductInfo(ctx: HeliaContextType | null, product: Prod
     } catch (err) {
         console.error('Failed to fetch product info:', err);
     }
-    return Object.assign(defaultProductInfo, { id: product.pid, price: price }); 
+    return Object.assign(defaultProductInfo, { id: product.pid, price: price });
 }
 
 /**
@@ -183,20 +178,19 @@ export async function addProductInfo(ctx: HeliaContextType | null, info: {
     condition: string[];
     shipping: string[];
 }): Promise<string> {
-    if (!ctx || !ctx.fs) {
+    if (!ctx || !ctx.fs || !ctx.helia) {
         return "";
     }
     try {
-        const jsonString = JSON.stringify(info)
-        const cid = await ctx.fs.addBytes(new TextEncoder().encode(jsonString))
-        const isPin = await ctx.helia?.pins.isPinned(cid)
+        const cid = await ctx.json!.add(info)
+        const isPin = await ctx.helia.pins.isPinned(cid)
         if (!isPin) {
-            const pinResult = ctx.helia?.pins.add(cid);
+            const pinResult = ctx.helia.pins.add(cid);
             if (pinResult) {
                 await drain(pinResult);
             }
         }
-        await ctx.helia!.libp2p.services.pubsub.publish(config.topic_file, new TextEncoder().encode(cid.toString()))
+        await ctx.helia.libp2p.services.pubsub.publish(config.topic_file, new TextEncoder().encode(cid.toString()))
         return cid.toString()
     } catch (err) {
         console.error('Failed to add product info:', err);
@@ -211,20 +205,19 @@ export async function addProductInfo(ctx: HeliaContextType | null, info: {
  * @returns 
  */
 export async function addUserExtendInfo(ctx: HeliaContextType | null, info: UserExtendInfo): Promise<string> {
-    if (!ctx || !ctx.fs) {
+    if (!ctx || !ctx.fs || !ctx.helia) {
         return "";
     }
     try {
-        const jsonString = JSON.stringify(info)
-        const cid = await ctx.fs.addBytes(new TextEncoder().encode(jsonString))
-        const isPin = await ctx.helia?.pins.isPinned(cid);
+        const cid = await ctx.json!.add(info)
+        const isPin = await ctx.helia.pins.isPinned(cid);
         if (!isPin) {
-            const pinResult = ctx.helia?.pins.add(cid);
+            const pinResult = ctx.helia.pins.add(cid);
             if (pinResult) {
                 await drain(pinResult);
             }
         }
-        await ctx.helia!.libp2p.services.pubsub.publish(config.topic_file, new TextEncoder().encode(cid.toString()))
+        await ctx.helia.libp2p.services.pubsub.publish(config.topic_file, new TextEncoder().encode(cid.toString()))
         return cid.toString()
     } catch (err) {
         console.error('Failed to add product info:', err);
@@ -240,26 +233,21 @@ export async function addUserExtendInfo(ctx: HeliaContextType | null, info: User
  */
 export async function getUserExtendInfo(ctx: HeliaContextType | null, cid: string, timeout?: number): Promise<UserExtendInfo> {
     const defaultInfo = { x: "", tg: "", e: "", d: "" }
-    if (!ctx || !ctx.fs) {
+    if (!ctx || !ctx.fs || !ctx.helia) {
         return defaultInfo;
     }
     try {
         const { signal } = new TimeoutController(timeout || DefaultTimeout)
         const _c = CID.parse(cid);
-        const chunks: Uint8Array[] = [];
-        for await (const chunk of ctx.fs.cat(_c, { signal })) {
-            chunks.push(chunk);
-        }
-        const isPin = await ctx.helia?.pins.isPinned(_c);
+        const isPin = await ctx.helia.pins.isPinned(_c);
         if (!isPin) {
-            const pinResult = ctx.helia?.pins.add(CID.parse(cid));
+            const pinResult = ctx.helia.pins.add(CID.parse(cid));
             if (pinResult) {
                 await drain(pinResult);
             }
         }
         await ctx.helia!.libp2p.services.pubsub.publish(config.topic_file, new TextEncoder().encode(cid.toString()))
-        const jsonString = new TextDecoder().decode(chunks.reduce((a, b) => Uint8Array.from([...a, ...b])))
-        return JSON.parse(jsonString);
+        return await ctx.json!.get(_c, { signal })
     } catch (err) {
         console.error('Failed to fetch product info:', err);
     }

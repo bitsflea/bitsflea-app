@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Filter, ChevronDown, CreditCard, Package2, Truck, RotateCcw, CheckCircle2, XCircle } from 'lucide-react';
 import { Order, OrderStatus } from '../types';
 import { OrderItem } from './OrderItem';
 import { OrderDetail } from './OrderDetail';
-
-interface SalesManagementProps {
-  orders: Order[];
-}
+import { useAuth } from '../context/AuthContext';
+import { useHelia } from '../context/HeliaContext';
+import { useToast } from '../context/ToastContext';
+import { InfiniteScroll } from './InfiniteScroll';
 
 const statusFilters: { value: OrderStatus | 'all'; label: string; icon: React.ElementType }[] = [
   { value: 'all', label: 'All Orders', icon: Filter },
@@ -18,17 +18,58 @@ const statusFilters: { value: OrderStatus | 'all'; label: string; icon: React.El
   { value: OrderStatus.Cancelled, label: 'Cancelled', icon: XCircle },
 ];
 
-export const SalesManagement: React.FC<SalesManagementProps> = ({ orders }) => {
+const ITEMS_PER_PAGE = 8;
+
+export const SalesManagement: React.FC = ({ }) => {
   const [activeFilter, setActiveFilter] = useState<OrderStatus | 'all'>('all');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-
-  const filteredOrders = activeFilter === 'all'
-    ? orders
-    : orders.filter(order => order.status === activeFilter);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const { user } = useAuth();
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const { rpc } = useHelia();
+  const { showToast } = useToast();
 
   const activeFilterLabel = statusFilters.find(f => f.value === activeFilter)?.label;
   const ActiveFilterIcon = statusFilters.find(f => f.value === activeFilter)?.icon || Filter;
+
+  useEffect(() => {
+    const loadorders = async () => {
+      const params = [user!.uid, page, ITEMS_PER_PAGE, activeFilter == 'all' ? undefined : activeFilter, true]
+      const data = await rpc!.request("getOrders", params);
+      console.log("fetchOrders data:", data);
+      if ("error" in data) {
+        showToast("error", data.error.message);
+        return;
+      }
+      setOrders(data.result);
+      setPage(1);
+      setHasMore(data.result.length >= ITEMS_PER_PAGE);
+    };
+    if (user && rpc) {
+      loadorders()
+    }
+  }, [user, activeFilter])
+
+  const loadMore = async () => {
+    setLoading(true);
+
+    const nextPage = page + 1;
+    const params = [user!.uid, nextPage, ITEMS_PER_PAGE, activeFilter == 'all' ? undefined : activeFilter, true]
+    const data = await rpc!.request("getOrders", params);
+
+    if (data.result.length >= ITEMS_PER_PAGE) {
+      setOrders(prev => [...prev, ...data.result]);
+      setPage(nextPage);
+      setHasMore(data.result.length >= ITEMS_PER_PAGE);
+    } else {
+      setHasMore(false);
+    }
+
+    setLoading(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -55,11 +96,10 @@ export const SalesManagement: React.FC<SalesManagementProps> = ({ orders }) => {
                       setActiveFilter(value);
                       setIsFilterOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2 px-4 py-2.5 transition-colors ${
-                      activeFilter === value
-                        ? 'bg-primary-50 text-primary-600'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
+                    className={`w-full flex items-center gap-2 px-4 py-2.5 transition-colors ${activeFilter === value
+                      ? 'bg-primary-50 text-primary-600'
+                      : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                   >
                     <Icon className="h-5 w-5" />
                     <span>{label}</span>
@@ -89,16 +129,23 @@ export const SalesManagement: React.FC<SalesManagementProps> = ({ orders }) => {
         </div>
       </div>
 
-      {filteredOrders.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {filteredOrders.map(order => (
-            <OrderItem 
-              key={order.oid} 
-              order={order}
-              onClick={() => setSelectedOrder(order)}
-            />
-          ))}
-        </div>
+      {orders.length > 0 ? (
+        <InfiniteScroll
+          loading={loading}
+          hasMore={hasMore}
+          onLoadMore={loadMore}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {orders.map(order => (
+              <OrderItem
+                key={order.oid}
+                order={order}
+                onClick={() => setSelectedOrder(order)}
+              />
+            ))}
+          </div>
+        </InfiniteScroll>
+
       ) : (
         <div className="text-center py-12 bg-white rounded-lg border border-gray-100">
           <Filter className="h-12 w-12 text-gray-400 mx-auto mb-4" />

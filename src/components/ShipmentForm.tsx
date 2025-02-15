@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Package2, Truck } from 'lucide-react';
+import { showOrderId } from '../utils/nuls';
 
 interface ShipmentFormProps {
     orderId: string;
@@ -24,7 +25,7 @@ export const ShipmentForm: React.FC<ShipmentFormProps> = ({
             <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-gray-900">Ship Return</h2>
+                    <h2 className="text-xl font-bold text-gray-900">Shipping</h2>
                     <button
                         onClick={onClose}
                         className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -37,9 +38,9 @@ export const ShipmentForm: React.FC<ShipmentFormProps> = ({
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     {/* Order ID */}
                     <div className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between" title={orderId}>
                             <span className="text-sm text-gray-500">Order ID</span>
-                            <span className="text-sm font-medium text-gray-900">{orderId}</span>
+                            <span className="text-sm font-medium text-gray-900">{showOrderId(orderId)}</span>
                         </div>
                     </div>
 
@@ -47,7 +48,7 @@ export const ShipmentForm: React.FC<ShipmentFormProps> = ({
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Package2 className="h-5 w-5" />
-                            <span>Please enter the return shipment tracking number</span>
+                            <span>Please enter the shipment tracking number</span>
                         </div>
 
                         <div className="space-y-2">

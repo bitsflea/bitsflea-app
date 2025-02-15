@@ -10,6 +10,9 @@ import { useHelia } from '../context/HeliaContext';
 import { useToast } from '../context/ToastContext';
 import { addFavorite, addFollowing, delFavorite, delFollowing, hasFavorite, hasFollowing } from '../utils/db';
 import { useAuth } from '../context/AuthContext';
+import { QuantityDialog } from './QuantityDialog';
+import { useLoading } from '../context/LoadingContext';
+import config from '../data/config';
 
 interface ProductDetailProps {
   product: Product;
@@ -39,6 +42,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   const ctx = useHelia();
   const { showToast } = useToast();
   const [userExtendInfo, setUserExtendInfo] = useState<UserExtendInfo>({ x: "", tg: "", e: "", d: "" });
+  const [showQuantity, setShowQuantity] = useState(false);
+  const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
     const loadProductInfo = async () => {
@@ -95,11 +100,54 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     try {
       // TODO: Implement NaBox wallet integration
       console.log('Buying product:', product);
-      alert('NaBox wallet integration coming soon!');
+      if (product.isRetail && product.stockCount > 1) {
+        setShowQuantity(true);
+      } else {
+        await onConfirm(product.stockCount);
+      }
     } catch (error) {
       console.error('Error processing purchase:', error);
     }
   };
+
+  const onConfirm = async (quantity: number) => {
+    setShowQuantity(false);
+    console.log("quantity:", quantity)
+    showLoading()
+    const orderId = await ctx.bitsflea!.newOrderId(user!.uid, product.pid);
+    console.log("orderId:", orderId);
+    if (!orderId) {
+      showToast("error", "Failed to obtain order ID");
+      hideLoading();
+      return;
+    }
+    try {
+      const callData = {
+        from: user!.uid,
+        value: 0,
+        contractAddress: config.contracts.Bitsflea,
+        methodName: "placeOrder",
+        methodDesc: "",
+        args: [orderId.toString(10), quantity],
+        multyAssetValues: []
+      }
+      console.log("callData:", callData);
+      const txHash = await window.nabox!.contractCall(callData);
+      await ctx?.nuls?.waitingResult(txHash);
+      onClose();
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        showToast("error", e.message)
+      } else {
+        console.error("Unknown error");
+      }
+    }
+    hideLoading()
+  }
+
+  const onQuantityClose = () => {
+    setShowQuantity(false);
+  }
 
   const handleDelist = () => {
     if (onDelist) {
@@ -142,13 +190,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   const openTelegram = (name: string) => {
     window.open(`https://t.me/${name}`, '_blank');
   }
-
-  // 模拟卖家信息
-  // const seller = {
-  //   id: 2,
-  //   name: "John Doe",
-  //   avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop&q=60"
-  // };
 
   return (
     <>
@@ -330,6 +371,13 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
           onSubmit={handleReview}
         />
       )}
+
+      {/* QuantityDialog */}
+      {showQuantity &&
+        (
+          <QuantityDialog price={product.price} maxValue={product.stockCount} onConfirm={onConfirm} onClose={onQuantityClose} />
+        )
+      }
     </>
   );
 };

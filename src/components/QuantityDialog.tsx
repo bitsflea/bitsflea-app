@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
 import { X, Minus, Plus } from 'lucide-react';
+import { getPrice } from '../utils/nuls';
 
 interface QuantityDialogProps {
     onClose: () => void;
     onConfirm: (quantity: number) => void;
-    price: number;
+    price: string;
+    maxValue: number;
 }
 
 export const QuantityDialog: React.FC<QuantityDialogProps> = ({
     onClose,
     onConfirm,
-    price
+    price,
+    maxValue
 }) => {
     const [quantity, setQuantity] = useState(1);
 
+    const priceInfo = getPrice(price);
+
     const handleQuantityChange = (value: number) => {
-        setQuantity(Math.max(1, value));
+        setQuantity(Math.max(1, Math.min(value, maxValue)));
     };
 
     return (
@@ -60,7 +65,7 @@ export const QuantityDialog: React.FC<QuantityDialogProps> = ({
                     <div className="text-center">
                         <div className="text-sm text-gray-500 mb-1">Total Price</div>
                         <div className="text-2xl font-bold text-primary-600">
-                            ${(price * quantity).toFixed(2)}
+                            ${(priceInfo.value * quantity).toFixed(2)} {priceInfo.symbol}
                         </div>
                     </div>
 

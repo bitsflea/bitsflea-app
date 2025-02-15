@@ -1,61 +1,141 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, CreditCard, Package2, Truck, RotateCcw, CheckCircle2, XCircle, Clock, AlertTriangle, Scale, Wallet } from 'lucide-react';
-import { Order, OrderStatus } from '../types';
+import { Order, OrderStatus, ProductReturn } from '../types';
 import { OrderProductInfo } from './OrderProductInfo';
 import { OrderAdditionalInfo } from './OrderAdditionalInfo';
 import { OrderTimeline } from './OrderTimeline';
 import { formatDate } from '../utils/date';
 import { ReturnForm } from './ReturnForm';
-import {ShipmentForm} from './ShipmentForm';
+import { ShipmentForm } from './ShipmentForm';
+import { getPrice } from '../utils/nuls';
+import { useAuth } from '../context/AuthContext';
+import config from '../data/config';
+import { useHelia } from '../context/HeliaContext';
+import { useToast } from '../context/ToastContext';
+import { useLoading } from '../context/LoadingContext';
+import { parseNULS } from 'nuls-api-v2';
 
 interface OrderDetailProps {
     order: Order;
     onClose: () => void;
 }
 
-// Mock shipping details for PendingReceipt status
-const mockShippingDetails = [
-    {
-        time: Date.now() - 172800000, // 48 hours ago
-        location: "Shipping Center, Los Angeles",
-        status: "Package received at shipping center"
-    },
-    {
-        time: Date.now() - 144000000, // 40 hours ago
-        location: "Transit Hub, Chicago",
-        status: "Package in transit"
-    },
-    {
-        time: Date.now() - 86400000, // 24 hours ago
-        location: "Local Delivery Center, New York",
-        status: "Out for delivery"
-    }
-];
-
 export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
     const [showReturnForm, setShowReturnForm] = useState(false);
-    const [showShipmentForm,setShowShipmentForm]=useState(false);
+    const [showShipmentForm, setShowShipmentForm] = useState(false);
+    const { user } = useAuth();
+    const { nuls, bitsflea } = useHelia();
+    const { showToast } = useToast();
+    const { showLoading, hideLoading } = useLoading();
+    const [returnInfo, setReturnInfo] = useState<ProductReturn | undefined | null>()
+
+    useEffect(() => {
+        const loadReturn = async () => {
+            const info = await bitsflea!.getProductReturn(order.oid)
+            console.log("return info:", info)
+            setReturnInfo(info)
+        }
+        if (bitsflea) {
+            loadReturn()
+        }
+    }, [order.oid])
 
     const handlePayment = async () => {
+        showLoading();
         try {
-            // TODO: Implement NaBox wallet integration
-            console.log('Processing payment for order:', order.oid);
-            alert('NaBox wallet integration coming soon!');
-        } catch (error) {
-            console.error('Error processing payment:', error);
+            console.log('Processing payment for order:', order);
+            const amount = getPrice(order.amount);
+            const postage = getPrice(order.postage);
+            amount.value += postage.value;
+            console.log("amount:", amount.value)
+            const callData = {
+                from: user!.uid,
+                value: 0,
+                contractAddress: config.contracts.Bitsflea,
+                methodName: "payOrder",
+                methodDesc: "",
+                args: [order.oid],
+                multyAssetValues: []
+            }
+            if (amount.assetId === "2,1") {
+                callData.value = amount.value;
+            } else if (amount.assetId === "0,0") {
+                callData.contractAddress = config.contracts.Point;
+                callData.methodName = "transferAndCall";
+                callData.args = [config.contracts.Bitsflea, parseNULS(amount.value, amount.decimals), order.oid];
+            } else {
+                const asset = amount.assetId.split(",")
+                // @ts-ignore
+                callData.multyAssetValues = [[parseNULS(amount.value, amount.decimals), asset[0], asset[1]]]
+            }
+            console.log("callData:", callData);
+            const txHash = await window.nabox!.contractCall(callData);
+            await nuls?.waitingResult(txHash);
+            onClose();
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                showToast("error", e.message)
+            } else {
+                console.error("Unknown error");
+            }
+        } finally {
+            hideLoading();
         }
     };
 
     const handleConfirmReceipt = async () => {
         try {
             console.log('Confirming receipt for order:', order.oid);
-            alert('Receipt confirmation will be implemented soon!');
-        } catch (error) {
-            console.error('Error confirming receipt:', error);
+            const callData = {
+                from: user!.uid,
+                value: 0,
+                contractAddress: config.contracts.Bitsflea,
+                methodName: "confirmReceipt",
+                methodDesc: "",
+                args: [order.oid],
+                multyAssetValues: []
+            }
+            const txHash = await window.nabox!.contractCall(callData);
+            await nuls?.waitingResult(txHash);
+            onClose();
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                showToast("error", e.message)
+            } else {
+                console.error('Error confirming receipt:', e);
+            }
         }
     };
 
-  const handleShipReturn = async () => {
+    const handleReConfirmReceipt = async () => {
+        try {
+            console.log('Confirming receipt for order:', order.oid);
+            const callData = {
+                from: user!.uid,
+                value: 0,
+                contractAddress: config.contracts.Bitsflea,
+                methodName: "reConfirmReceipt",
+                methodDesc: "",
+                args: [order.oid],
+                multyAssetValues: []
+            }
+            const txHash = await window.nabox!.contractCall(callData);
+            await nuls?.waitingResult(txHash);
+            onClose();
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                showToast("error", e.message)
+            } else {
+                console.error('Error confirming receipt:', e);
+            }
+        }
+    };
+
+    const handleShipping = async () => {
+        setShowShipmentForm(true);
+    }
+
+    const handleShipReturn = async () => {
         setShowShipmentForm(true);
     };
 
@@ -70,10 +150,36 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
         alert('Return request submitted successfully!');
     };
 
-    const handleShipmentSubmit=(data:{shipmentNumber:string})=>{
-      console.log('Shipment submitted:', { orderId: order.oid, ...data });
-      setShowShipmentForm(false);
-      alert('Shipment request submitted successfully!');
+    const handleShipmentSubmit = async (data: { shipmentNumber: string }) => {
+        console.log('Shipment submitted:', { orderId: order.oid, ...data });
+        setShowShipmentForm(false);
+        if (order.status === OrderStatus.PendingShipment && user?.uid === order.seller) {//发货
+            const callData = {
+                from: user!.uid,
+                value: 0,
+                contractAddress: config.contracts.Bitsflea,
+                methodName: "shipments",
+                methodDesc: "",
+                args: [order.oid, data.shipmentNumber],
+                multyAssetValues: []
+            }
+            const txHash = await window.nabox!.contractCall(callData);
+            await nuls?.waitingResult(txHash);
+            onClose();
+        } else if (order.status === OrderStatus.Returning && user?.uid === order.buyer) { //退货发货
+            const callData = {
+                from: user!.uid,
+                value: 0,
+                contractAddress: config.contracts.Bitsflea,
+                methodName: "reShipments",
+                methodDesc: "",
+                args: [order.oid, data.shipmentNumber],
+                multyAssetValues: []
+            }
+            const txHash = await window.nabox!.contractCall(callData);
+            await nuls?.waitingResult(txHash);
+            onClose();
+        }
     }
 
     const getStatusInfo = () => {
@@ -100,12 +206,22 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                     timeoutDate: null
                 };
             case OrderStatus.PendingShipment:
-                return {
-                    icon: Package2,
-                    title: 'Pending Shipment',
-                    description: 'Seller is preparing your order',
-                    timeoutDate: order.shipTimeOut
-                };
+                if (user?.uid == order.seller) {
+                    return {
+                        icon: Package2,
+                        title: 'Pending Shipment',
+                        description: 'Please ship as soon as possible',
+                        timeoutDate: order.shipTimeOut
+                    };
+                } else {
+                    return {
+                        icon: Package2,
+                        title: 'Pending Shipment',
+                        description: 'Seller is preparing your order',
+                        timeoutDate: order.shipTimeOut
+                    };
+                }
+
             case OrderStatus.PendingReceipt:
                 return {
                     icon: Truck,
@@ -195,7 +311,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                                         </div>
                                     )}
                                 </div>
-                                {order.status === OrderStatus.PendingPayment && (
+                                {order.status === OrderStatus.PendingPayment && user?.uid == order.buyer && (
                                     <button
                                         onClick={handlePayment}
                                         className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
@@ -204,15 +320,37 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                                         <span>Pay Now</span>
                                     </button>
                                 )}
-                                {order.status === OrderStatus.Returning && (
-                                  <button
-                                    onClick={handleShipReturn}
-                                    className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
-                                  >
-                                    <Truck className="h-5 w-5" />
-                                    <span>Ship Return</span>
-                                  </button>
+
+                                {order.status === OrderStatus.PendingShipment && user?.uid === order.seller && (
+                                    <button
+                                        onClick={handleShipping}
+                                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
+                                    >
+                                        <Truck className="h-5 w-5" />
+                                        <span>Shipping</span>
+                                    </button>
                                 )}
+
+                                {order.status === OrderStatus.Returning && (returnInfo && returnInfo.status === 0) && user?.uid === order.buyer && (
+                                    <button
+                                        onClick={handleShipReturn}
+                                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
+                                    >
+                                        <Truck className="h-5 w-5" />
+                                        <span>Ship Return</span>
+                                    </button>
+                                )}
+
+                                {order.status === OrderStatus.Returning && (returnInfo && returnInfo.status === 100) && user?.uid === order.seller && (
+                                    <button
+                                        onClick={handleReConfirmReceipt}
+                                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
+                                    >
+                                        <Truck className="h-5 w-5" />
+                                        <span>Confirm</span>
+                                    </button>
+                                )}
+
                             </div>
                             {order.status === OrderStatus.PendingReceipt && (
                                 <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200">
@@ -251,13 +389,15 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
 
                         {/* Order Timeline */}
                         <OrderTimeline
+                            order={order}
+                            returnInfo={returnInfo}
+                            status={order.status}
                             createTime={order.createTime}
                             payTime={order.payTime}
                             shipTime={order.shipTime}
                             receiptTime={order.receiptTime}
                             endTime={order.endTime}
                             isPendingReceipt={order.status === OrderStatus.PendingReceipt}
-                            shippingDetails={order.status === OrderStatus.PendingReceipt ? mockShippingDetails : undefined}
                         />
                     </div>
                 </div>
@@ -271,13 +411,13 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                 />
             )}
 
-          {showShipmentForm && (
-            <ShipmentForm orderId={order.oid} onClose={()=>setShowShipmentForm(false)}
-              onSubmit={handleShipmentSubmit}
-              />
-          )
-            
-          }
+            {showShipmentForm && (
+                <ShipmentForm orderId={order.oid} onClose={() => setShowShipmentForm(false)}
+                    onSubmit={handleShipmentSubmit}
+                />
+            )
+
+            }
         </>
     );
 };
