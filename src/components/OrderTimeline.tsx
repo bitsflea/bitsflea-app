@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { MapPin, Clock3 } from 'lucide-react';
 import { formatDate } from '../utils/date';
 import { Order, OrderStatus, ProductReturn } from '../types';
-import { useHelia } from '../context/HeliaContext';
 
 // Mock shipping details for PendingReceipt status
 const mockShippingDetails = [
