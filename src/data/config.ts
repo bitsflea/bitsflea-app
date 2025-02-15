@@ -1,7 +1,8 @@
 export default {
     apiRPC: "https://api.bitsflea.com",
     // apiRPC: "http://localhost:3000",
-    chainAPI: "http://localhost:5173/api",
+    // chainAPI: "http://localhost:5173/api",
+    chainAPI:"http://beta.api.nuls.io/jsonrpc/",
     contracts: {
         Bitsflea: "tNULSeBaN8NhBGGVosk1ws2BuocWSeequQ6STx",
         Point: "tNULSeBaMxHq6VNDxG7qp14xxyUKrqPmCgruEK"
