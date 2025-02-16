@@ -20,8 +20,6 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, search
   const { rpc } = useHelia();
   const { showToast } = useToast();
 
-  console.log("searchQuery:", searchQuery);
-
   useEffect(() => {
     const getProducts = async () => {
       try {
