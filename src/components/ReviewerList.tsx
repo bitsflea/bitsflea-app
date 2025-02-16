@@ -83,7 +83,10 @@ export const ReviewerList: React.FC = () => {
 
   const hasVoted = (voted: string) => {
     const obj = JSON.parse(voted)
-    return Object.keys(obj).includes(user!.uid)
+    if (user) {
+      return Object.keys(obj).includes(user.uid)
+    }
+    return false
   }
 
   const handleVote = async (reviewerId: string, voteType: 'up' | 'down') => {

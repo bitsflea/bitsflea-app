@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { Search, X } from 'lucide-react';
 
-export const SearchBar = () => {
+interface SearchBarProps {
+  onSearch?: (query: string) => void
+}
+
+export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement search functionality
-    console.log('Search query:', searchQuery);
+    if (onSearch) {
+      onSearch(searchQuery)
+    }
   };
 
   const handleMobileSearchToggle = () => {
@@ -50,9 +55,8 @@ export const SearchBar = () => {
 
         {/* Mobile Search Dropdown */}
         <div
-          className={`fixed left-0 right-0 bg-white z-50 transition-all duration-300 shadow-lg ${
-            showMobileSearch ? 'top-[64px]' : '-top-full'
-          }`}
+          className={`fixed left-0 right-0 bg-white z-50 transition-all duration-300 shadow-lg ${showMobileSearch ? 'top-[64px]' : '-top-full'
+            }`}
         >
           <form onSubmit={handleSearch} className="p-4">
             <div className="relative">

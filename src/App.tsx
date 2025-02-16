@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { ProductGrid } from './components/ProductGrid';
 import { SearchBar } from './components/SearchBar';
@@ -12,11 +12,12 @@ import { BackToTop } from './components/BackToTop';
 import { useAuth } from './context/AuthContext';
 
 export default function App() {
-  const [activeCategory, setActiveCategory] = useState<number | null>(null);
+  const [activeCategory, setActiveCategory] = useState<number | undefined | null>(null);
   const [showUserCenter, setShowUserCenter] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showReviewerList, setShowReviewerList] = useState(false);
   const [showProductReview, setShowProductReview] = useState(false);
+  const [query, setQuery] = useState('');
   const { isAuthenticated, logout, user } = useAuth();
 
   const handleUserClick = () => {
@@ -58,6 +59,11 @@ export default function App() {
     setShowProductReview(true);
   };
 
+  const handleSearch = (query: string) => {
+    console.log('Search query:', query);
+    setQuery(query);
+  }
+
   const renderContent = () => {
     if (showUserCenter) {
       return <UserCenter />;
@@ -81,7 +87,7 @@ export default function App() {
               />
             </div>
             <div className="hidden md:block mt-4">
-              <SearchBar />
+              <SearchBar onSearch={handleSearch} />
             </div>
 
             {/* Mobile: Category Menu and Search Bar in same row */}
@@ -90,7 +96,7 @@ export default function App() {
                 activeCategory={activeCategory}
                 onCategoryChange={setActiveCategory}
               />
-              <SearchBar />
+              <SearchBar onSearch={handleSearch} />
             </div>
           </div>
         </div>
@@ -98,7 +104,7 @@ export default function App() {
         {/* Content Section with top padding to account for fixed header */}
         <div className="max-w-7xl mx-auto px-2 sm:px-4 pb-20 md:pb-6">
           <div className="pt-[150px] md:pt-[240px]">
-            <ProductGrid activeCategory={activeCategory} />
+            <ProductGrid activeCategory={activeCategory} searchQuery={query} />
           </div>
         </div>
       </div>
