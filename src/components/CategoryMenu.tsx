@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { Sparkles, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { categories } from '../data/categories';
 
 interface CategoryMenuProps {
-  activeCategory: number | null;
-  onCategoryChange: (category: number | null) => void;
+  activeCategory?: number | null;
+  onCategoryChange: (category: number | undefined | null) => void;
 }
 
 export const CategoryMenu: React.FC<CategoryMenuProps> = ({ activeCategory, onCategoryChange }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const activeIcon = categories.find(cat => cat.value === activeCategory)?.icon || Sparkles;
+  const active = categories.find(cat => cat.value === activeCategory) || categories[0];
+  const activeIcon = active.icon;
   const Icon = activeIcon;
 
   return (
@@ -22,7 +23,7 @@ export const CategoryMenu: React.FC<CategoryMenuProps> = ({ activeCategory, onCa
         >
           <div className="flex items-center gap-2">
             <Icon className="h-5 w-5 text-primary-600" />
-            <span className="font-medium text-gray-900">{activeCategory}</span>
+            <span className="font-medium text-gray-900">{active.name}</span>
           </div>
           <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
         </button>

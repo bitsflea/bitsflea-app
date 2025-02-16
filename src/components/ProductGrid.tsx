@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProductCard } from './ProductCard';
 import { Product } from '../types';
 import { useHelia } from '../context/HeliaContext';
@@ -6,12 +6,13 @@ import { useToast } from '../context/ToastContext';
 import { InfiniteScroll } from './InfiniteScroll';
 
 interface ProductGridProps {
-  activeCategory: number | null;
+  searchQuery?: string;
+  activeCategory?: number | null;
 }
 
 const ITEMS_PER_PAGE = 8;
 
-export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
+export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, searchQuery }) => {
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -19,11 +20,13 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
   const { rpc } = useHelia();
   const { showToast } = useToast();
 
+  console.log("searchQuery:", searchQuery);
+
   useEffect(() => {
     const getProducts = async () => {
       try {
-        const data = await rpc!.request("getProducts", [page, ITEMS_PER_PAGE, activeCategory, null]);
-        // console.log("data:", data);
+        const data = await rpc!.request("getProducts", [page, ITEMS_PER_PAGE, activeCategory, null, null, searchQuery]);
+        console.log("data:", data);
         setDisplayedProducts(data.result);
         setPage(1);
         setHasMore(data.result.length > ITEMS_PER_PAGE);
@@ -39,13 +42,13 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory }) => {
     if (rpc) {
       getProducts();
     }
-  }, [activeCategory, rpc]);
+  }, [activeCategory, searchQuery, rpc]);
 
   const loadMore = async () => {
     setLoading(true);
 
     const nextPage = page + 1;
-    const data = await rpc!.request("getProducts", [nextPage, ITEMS_PER_PAGE, activeCategory, null]);
+    const data = await rpc!.request("getProducts", [nextPage, ITEMS_PER_PAGE, activeCategory, null, null, searchQuery]);
 
     if (data.result.length >= ITEMS_PER_PAGE) {
       setDisplayedProducts(prev => [...prev, ...data.result]);
