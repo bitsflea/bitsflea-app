@@ -60,7 +60,6 @@ export default function App() {
   };
 
   const handleSearch = (query: string) => {
-    console.log('Search query:', query);
     setQuery(query);
   }
 

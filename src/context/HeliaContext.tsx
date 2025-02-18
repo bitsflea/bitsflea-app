@@ -21,6 +21,7 @@ import config from '../data/config';
 import { BitsFlea, HeliaContextType } from '../types';
 import { PubSub } from '@libp2p/interface';
 import { CID } from 'multiformats/cid'
+// import { multiaddr } from '@multiformats/multiaddr'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import drain from 'it-drain'
 import { getClient } from '../utils/client';
@@ -83,7 +84,12 @@ function createOption(pri: any) {
                 ],
             })
         ],
-        connectionManager: { maxConnections: 10 }
+        connectionManager: {
+            maxConnections: 20,
+            outboundUpgradeTimeout: 30000,
+            inboundUpgradeTimeout: 30000,
+            dialTimeout: 50000
+        }
     }
     return option
 }
@@ -153,14 +159,17 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     if (peerIds.includes(evt.detail.id.toString()) === false) {
                         console.debug(`connect to ${peerId}`)
                         await libp2p.dial(evt.detail.id).catch(console.debug)
+                    } else {
+                        console.debug("in peers.")
                     }
                 });
 
                 libp2p.addEventListener('peer:connect', (evt) => {
-                    const connectedPeer = evt.detail
-                    // console.log(connectedPeer)
-                    const peerId = connectedPeer.toString()
-                    console.log(`Connected to peer: ${peerId}`)
+                    console.log(`Connected to peer: `, evt.detail.toString())
+                })
+
+                libp2p.addEventListener('peer:disconnect', (evt) => {
+                    console.log(`Peer disconnect: `, evt.detail.toString())
                 })
 
                 const blockstore = new IDBBlockstore(`bitsflea-node-${uid}`)
