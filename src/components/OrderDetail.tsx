@@ -66,7 +66,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
             } else {
                 const asset = amount.assetId.split(",")
                 // @ts-ignore
-                callData.multyAssetValues = [[parseNULS(amount.value, amount.decimals), asset[0], asset[1]]]
+                callData.multyAssetValues = [[parseNULS(amount.value, amount.decimals).toString(10), asset[0], asset[1]]]
             }
             console.log("callData:", callData);
             const txHash = await window.nabox!.contractCall(callData);
