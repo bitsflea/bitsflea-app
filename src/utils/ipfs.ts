@@ -5,7 +5,7 @@ import config from '../data/config';
 import drain from 'it-drain'
 import { TimeoutController } from 'timeout-abort-controller'
 
-const DefaultTimeout = 30000
+const DefaultTimeout = 50000
 
 export const defaultProductInfo: ProductInfo = {
     id: "",
@@ -47,7 +47,7 @@ export async function getProductInfo(ctx: HeliaContextType | null, product: Prod
         }
         return Object.assign(obj, { id: product.pid, price: price });
     } catch (err) {
-        console.error('Failed to fetch product info:', err);
+        console.error('Failed to fetch product info:', product.description, err);
     }
     return Object.assign(defaultProductInfo, { id: product.pid, price: price });
 }

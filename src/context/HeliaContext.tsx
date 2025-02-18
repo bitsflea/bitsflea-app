@@ -30,6 +30,7 @@ import jaysonPromiseBrowserClient from "jayson/promise/lib/client/browser";
 import { createOrbitDB } from '@orbitdb/core';
 import { json as Json, type JSON as HJSON } from '@helia/json'
 
+const SERVER_ID = "12D3KooWT36TURqwnygqydMHCT4fFeHdGibgW7EwcWGaj9CEnk3h"
 
 async function initPriKey() {
     let uid = localStorage.getItem("uid") ?? Math.floor(Math.random() * 10 ** 8).toString()
@@ -125,7 +126,6 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const initializeHelia = async () => {
             try {
                 setLoading(true);
-                setError(null);
 
                 const { pri, uid } = await initPriKey()
                 const option = createOption(pri)
@@ -168,8 +168,12 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     console.log(`Connected to peer: `, evt.detail.toString())
                 })
 
-                libp2p.addEventListener('peer:disconnect', (evt) => {
+                libp2p.addEventListener('peer:disconnect', async (evt) => {
                     console.log(`Peer disconnect: `, evt.detail.toString())
+                    // if (evt.detail.toString() === SERVER_ID) {
+                    //     console.log("重连...")
+                    //     await libp2p.dial(evt.detail).catch(console.debug)
+                    // }
                 })
 
                 const blockstore = new IDBBlockstore(`bitsflea-node-${uid}`)
@@ -206,10 +210,10 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         };
 
         initializeHelia();
-    }, []);
+    }, [error]);
 
     return (
-        <HeliaContext.Provider value={{ helia, fs, loading, error, nuls, bitsflea, rpc, userDB, json }}>
+        <HeliaContext.Provider value={{ helia, fs, loading, nuls, bitsflea, rpc, userDB, json }}>
             {children}
         </HeliaContext.Provider>
     );
