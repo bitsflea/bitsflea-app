@@ -62,7 +62,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
             } else if (amount.assetId === "0,0") {
                 callData.contractAddress = config.contracts.Point;
                 callData.methodName = "transferAndCall";
-                callData.args = [config.contracts.Bitsflea, parseNULS(amount.value, amount.decimals), order.oid];
+                callData.args = [config.contracts.Bitsflea, parseNULS(amount.value, amount.decimals).toString(10), order.oid];
             } else {
                 const asset = amount.assetId.split(",")
                 // @ts-ignore
