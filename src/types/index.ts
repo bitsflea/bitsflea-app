@@ -257,7 +257,7 @@ export interface HeliaContextType {
   fs: ReturnType<typeof unixfs> | null;
   nuls: NULSAPI | null;
   loading: boolean;
-  error: unknown;
+  // error: unknown;
   bitsflea: BitsFlea | null;
   rpc: jaysonPromiseBrowserClient | null;
   userDB: any;
