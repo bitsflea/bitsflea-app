@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { X, Upload, Trash2 } from 'lucide-react';
+import { showOrderId } from '../utils/nuls';
 
 interface ReturnFormProps {
   onClose: () => void;
@@ -61,9 +62,9 @@ export const ReturnForm: React.FC<ReturnFormProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Order ID */}
           <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between" title={orderId}>
               <span className="text-sm text-gray-500">Order ID</span>
-              <span className="text-sm font-medium text-gray-900">{orderId}</span>
+              <span className="text-sm font-medium text-gray-900">{showOrderId(orderId)}</span>
             </div>
           </div>
 
