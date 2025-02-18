@@ -7,6 +7,7 @@ import config from '../data/config';
 import { Nabox, UserInfo } from '../types';
 import { getHash } from '../utils/nuls';
 import { addImages, addUserExtendInfo } from '../utils/ipfs';
+import { useToast } from '../context/ToastContext';
 
 declare global {
   interface Window {
@@ -26,6 +27,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
   const [showRegister, setShowRegister] = useState(false);
   const [connectedAddress, setConnectedAddress] = useState<string>('');
   const ctx = useHelia();
+  const { showToast } = useToast();
 
   // Get user info from localStorage
   const mockFetchUserInfo = async (address: string): Promise<UserInfo | null | undefined> => {
@@ -47,7 +49,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
           setConnectedAddress(naboxInfo[0]);
           try {
             const userInfo = await mockFetchUserInfo(naboxInfo[0]);
-            console.log("userInfo:",userInfo)
+            console.log("userInfo:", userInfo)
 
             if (userInfo) {
               // User exists, proceed with login
@@ -57,8 +59,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
               // User doesn't exist, show registration form
               setShowRegister(true);
             }
-          } catch (error) {
-            console.error('Error fetching user info:', error);
+          } catch (e: unknown) {
+            if (e instanceof Error) {
+              showToast("error", e.message);
+            } else if (typeof e === "string") {
+              showToast("error", e);
+            } else {
+              console.error('Error fetching user info:', typeof e, e);
+            }
           }
         }
       } else {
