@@ -37,6 +37,7 @@ export const SalesManagement: React.FC = ({ }) => {
 
   useEffect(() => {
     const loadorders = async () => {
+      setOrders([]);
       const params = [user!.uid, page, ITEMS_PER_PAGE, activeFilter == 'all' ? undefined : activeFilter, true]
       const data = await rpc!.request("getOrders", params);
       console.log("fetchOrders data:", data);
