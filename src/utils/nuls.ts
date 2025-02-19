@@ -38,3 +38,7 @@ export function getPrice(priceStr: string): Price {
 export function showOrderId(oid: string) {
     return `${oid.substring(0, 8)}...${oid.slice(-8)}`
 }
+
+export function showAddress(address: string, len: number = 8) {
+    return `${address.substring(0, len)}...${address.slice(-len)}`
+}

@@ -253,3 +253,47 @@ export async function getUserExtendInfo(ctx: HeliaContextType | null, cid: strin
     }
     return defaultInfo;
 }
+
+export async function addJson<T>(ctx: HeliaContextType | null, info: T): Promise<string> {
+    if (!ctx || !ctx.fs || !ctx.helia) {
+        return "";
+    }
+    try {
+        const cid = await ctx.json!.add(info)
+        const isPin = await ctx.helia.pins.isPinned(cid)
+        if (!isPin) {
+            const pinResult = ctx.helia.pins.add(cid);
+            if (pinResult) {
+                await drain(pinResult);
+            }
+        }
+        await ctx.helia.libp2p.services.pubsub.publish(config.topic_file, new TextEncoder().encode(cid.toString()))
+        return cid.toString()
+    } catch (err) {
+        console.error('Failed to add json:', err);
+    }
+    return ""
+}
+
+export async function getJson<T>(ctx: HeliaContextType | null, cid: string, timeout?: number): Promise<T> {
+    const defaultInfo = {} as T
+    if (!ctx || !ctx.fs || !ctx.helia) {
+        return defaultInfo;
+    }
+    try {
+        const { signal } = new TimeoutController(timeout || DefaultTimeout)
+        const _c = CID.parse(cid);
+        const isPin = await ctx.helia.pins.isPinned(_c);
+        if (!isPin) {
+            const pinResult = ctx.helia.pins.add(CID.parse(cid));
+            if (pinResult) {
+                await drain(pinResult);
+            }
+        }
+        await ctx.helia!.libp2p.services.pubsub.publish(config.topic_file, new TextEncoder().encode(cid.toString()))
+        return await ctx.json!.get(_c, { signal })
+    } catch (err) {
+        console.error('Failed to fetch json:', err);
+    }
+    return defaultInfo;
+}

@@ -206,7 +206,7 @@ export const ReviewerList: React.FC = () => {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
-                      <div>
+                      <div className='w-full'>
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
                             {reviewer.nickname}
@@ -216,7 +216,7 @@ export const ReviewerList: React.FC = () => {
                             <span>{reviewer.creditValue}</span>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-500 mb-2">{reviewer.uid}</p>
+                        <p className="text-sm text-gray-500 mb-2 truncate" title={reviewer.uid}>{reviewer.uid}</p>
                         <ExtendInfo className="text-gray-600 mb-4" extendInfo={reviewer.extendInfo} />
                       </div>
                     </div>

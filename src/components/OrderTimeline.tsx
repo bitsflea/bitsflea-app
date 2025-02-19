@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapPin, Clock3 } from 'lucide-react';
 import { formatDate } from '../utils/date';
-import { Order, OrderStatus, ProductReturn } from '../types';
+import { Order, OrderStatus, ProductReturn, ReturnReason } from '../types';
 
 // Mock shipping details for PendingReceipt status
 const mockShippingDetails = [
@@ -52,15 +52,22 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({
   returnInfo
 }) => {
   const [shippingDetails, setShippingDetails] = useState<TimelineEvent[]>([])
+  let reason: ReturnReason = { reason: "", images: [] }
+
+  if (returnInfo) {
+    reason = JSON.parse(returnInfo.reasons)
+  }
 
   useEffect(() => {
     const loadShipping = async () => {
       //TODO:调用api实现
 
       // test code
-      setShippingDetails(mockShippingDetails)
+      setShippingDetails([])  // mockShippingDetails
     }
-    loadShipping()
+    if (order.shipmentNumber) {
+      loadShipping()
+    }
   }, [order.shipmentNumber])
 
   return (
@@ -123,13 +130,13 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({
             </div>
             <div>
               <div className="font-medium text-gray-900">Order Return</div>
-              <div className="text-sm text-gray-500">Reasons: {returnInfo.reasons}</div>
+              <div className="text-sm text-gray-500">Reasons: {reason.reason}</div>
               <div className="text-sm text-gray-500">{formatDate(returnInfo.createTime)}</div>
             </div>
           </div>
         )}
 
-        {returnInfo && returnInfo.shipTime && (
+        {returnInfo && returnInfo.shipTime > 0 && (
           <div className="ml-9 mt-2 space-y-4">
             <div className="relative pl-6 border-l-2 border-primary-100 last:border-l-0">
               <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-primary-100 flex items-center justify-center">
@@ -142,7 +149,7 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({
           </div>
         )}
 
-        {returnInfo && returnInfo.receiptTime && (
+        {returnInfo && returnInfo.receiptTime > 0 && (
           <div className="ml-9 mt-2 space-y-4">
             <div className="relative pl-6 border-l-2 border-primary-100 last:border-l-0">
               <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-primary-100 flex items-center justify-center">
@@ -153,7 +160,6 @@ export const OrderTimeline: React.FC<OrderTimelineProps> = ({
             </div>
           </div>
         )}
-
 
         {receiptTime && (
           <div className="flex items-start gap-3">
