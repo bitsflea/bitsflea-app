@@ -105,8 +105,8 @@ export const ProductReview: React.FC = () => {
       console.log("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await nuls?.waitingResult(txHash);
-    } catch (e: unknown) {
-      if (e instanceof Error) {
+    } catch (e: any) {
+      if (e instanceof Error || "message" in e) {
         showToast("error", e.message)
       } else {
         console.error("Unknown error:", e);

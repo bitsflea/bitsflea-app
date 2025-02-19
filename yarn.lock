@@ -3848,6 +3848,16 @@ es-object-atoms@^1.0.0:
   dependencies:
     es-errors "^1.3.0"
 
+es-set-tostringtag@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/es-set-tostringtag/-/es-set-tostringtag-2.1.0.tgz#f31dbbe0c183b00a6d26eb6325c810c0fd18bd4d"
+  integrity sha512-j6vWzfrGVfyXxge+O0x5sh6cvxAog0a/4Rdd2K36zCMV5eJ+/+tOAngRO8cODMNWbVRdVlmGZQL2YS3yR8bIUA==
+  dependencies:
+    es-errors "^1.3.0"
+    get-intrinsic "^1.2.6"
+    has-tostringtag "^1.0.2"
+    hasown "^2.0.2"
+
 es6-promise@3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/es6-promise/-/es6-promise-3.0.2.tgz#010d5858423a5f118979665f46486a95c6ee2bb6"
@@ -4280,12 +4290,13 @@ foreground-child@^3.1.0:
     signal-exit "^4.0.1"
 
 form-data@^4.0.0:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/form-data/-/form-data-4.0.1.tgz#ba1076daaaa5bfd7e99c1a6cb02aa0a5cff90d48"
-  integrity sha512-tzN8e4TX8+kkxGPK8D5u0FNmjPUjw3lwC9lSLxxoB/+GtsJG91CO8bSWy73APlgAZzZbXEYZJuxjkHH2w+Ezhw==
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/form-data/-/form-data-4.0.2.tgz#35cabbdd30c3ce73deb2c42d3c8d3ed9ca51794c"
+  integrity sha512-hGfm/slu0ZabnNt4oaRZ6uREyfCj6P4fT/n6A1rGV+Z0VdGXjfOhVUpkn6qVQONHGIFwmveGXyDs75+nr6FM8w==
   dependencies:
     asynckit "^0.4.0"
     combined-stream "^1.0.8"
+    es-set-tostringtag "^2.1.0"
     mime-types "^2.1.12"
 
 fraction.js@^4.3.7:
@@ -6066,7 +6077,7 @@ npm-run-path@^5.1.0:
 
 "nuls-api-v2@https://github.com/xiangxn/nuls-api-v2.git":
   version "1.0.0"
-  resolved "https://github.com/xiangxn/nuls-api-v2.git#a7657002ad75417e5f28623e8fc566d80cd3b050"
+  resolved "https://github.com/xiangxn/nuls-api-v2.git#a2c2a02a0f87487b640f4f81247032eb2c35049c"
   dependencies:
     axios "^1.7.7"
     bignumber.js "^9.1.2"
@@ -6077,9 +6088,9 @@ npm-run-path@^5.1.0:
     nuls-sdk-js "^2.5.5"
 
 nuls-sdk-js@^2.5.5:
-  version "2.5.6"
-  resolved "https://registry.yarnpkg.com/nuls-sdk-js/-/nuls-sdk-js-2.5.6.tgz#73c780c8f369f942b1ee096dda0e1ed5b28ada2a"
-  integrity sha512-pig/kyk9lalFO8u7ltn5U0Url9/MIl/yDtFjWUVJgT1PfPR/bBqcdINE1tnBepnlNeqJZ/sXG44iAr/Bm83JQQ==
+  version "2.5.7"
+  resolved "https://registry.yarnpkg.com/nuls-sdk-js/-/nuls-sdk-js-2.5.7.tgz#4530ccf4a30ee25008fdd1cd355c0450d806e52e"
+  integrity sha512-teUY2XyOlE+n8t5HmPkcB5FrO0ZQiQJWHQPLxyPXMrsdfMvQ2qhS9iaUuOLIGGWFsDlrQRVGiUQMZUBTcdwe2w==
   dependencies:
     acorn "6.4.1"
     axios "^0.18.1"
