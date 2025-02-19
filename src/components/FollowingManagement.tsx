@@ -1,38 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import { Store } from 'lucide-react';
 import { ShopCard } from './ShopCard';
-import { Shop } from '../types';
+import { Shop, UserInfo } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useHelia } from '../context/HeliaContext';
 import { delFollowing, getUserData, KEY_FOLLOWING } from '../utils/db';
+import { useToast } from '../context/ToastContext';
 
 
 export const FollowingManagement: React.FC = ({
 }) => {
   const { user } = useAuth()
-  const { userDB, rpc } = useHelia()
+  const { userDB, rpc, bitsflea } = useHelia()
   const [shops, setShops] = useState<Shop[]>([])
+  const { showToast } = useToast();
 
   useEffect(() => {
     const loadFollowing = async () => {
       const ids = await getUserData(userDB, user!.uid, KEY_FOLLOWING)
       if (ids.length > 0) {
         // console.log("ids:", ids)
-        const data = await rpc!.request("getUsersByIds", [ids]);
-        // console.log("data:", data)
-        const _shops = data.result.map((v: any) => {
-          return {
-            id: v.uid,
-            name: v.nickname,
-            avatar: v.head,
-            description: v.extendInfo,
-            lastActiveTime: v.lastActiveTime,
-            productCount: v.postsTotal,
-            sellCount: v.sellTotal,
-            rating: v.creditValue
-          } as Shop
-        })
-        setShops(_shops)
+        // const data = await rpc!.request("getUsersByIds", [ids]);
+        try {
+          const data = await bitsflea!.getUsersByIds(ids)
+          // console.log("data:", data)
+          const _shops = data.map((v: UserInfo) => {
+            return {
+              id: v.uid,
+              name: v.nickname,
+              avatar: v.head,
+              description: v.extendInfo,
+              lastActiveTime: v.lastActiveTime,
+              productCount: v.postsTotal,
+              sellCount: v.sellTotal,
+              rating: v.creditValue
+            } as Shop
+          })
+          setShops(_shops)
+        } catch (e: unknown) {
+          if (e instanceof Error) {
+            showToast("error", e.message)
+          } else {
+            console.error('Error getUsersByIds:', e);
+          }
+        }
       }
     }
     if (user && rpc) {

@@ -5,21 +5,32 @@ import { ProductCard } from './ProductCard';
 import { delFavorite, getUserData } from '../utils/db';
 import { useAuth } from '../context/AuthContext';
 import { useHelia } from '../context/HeliaContext';
+import { useToast } from '../context/ToastContext';
 
 
 export const FavoriteManagement: React.FC = ({
 }) => {
   const { user } = useAuth()
-  const { userDB, rpc } = useHelia()
+  const { userDB, rpc, bitsflea } = useHelia()
   const [products, setProducts] = useState<Product[]>([])
+  const { showToast } = useToast();
 
   useEffect(() => {
     const loadProducts = async () => {
       const ids = await getUserData(userDB, user!.uid)
       if (ids.length > 0) {
-        const data = await rpc!.request("getProductsByIds", [ids]);
-        // console.log("data:", data)
-        setProducts(data.result)
+        try {
+          // const data = await rpc!.request("getProductsByIds", [ids]);
+          const data = await bitsflea!.getProductsByIds(ids)
+          // console.log("data:", data)
+          setProducts(data)
+        } catch (e: unknown) {
+          if (e instanceof Error) {
+            showToast("error", e.message)
+          } else {
+            console.error('Error getProductsByIds:', e);
+          }
+        }
       }
     }
     if (user && rpc) {

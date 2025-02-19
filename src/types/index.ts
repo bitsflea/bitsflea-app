@@ -245,6 +245,8 @@ export interface BitsFlea {
   newOrderId: (address: string, pid: string) => Promise<BigNumber | null>
   getProduct: (pid: string) => Promise<Product | null>
   getProductReturn: (oid: string) => Promise<ProductReturn | null>
+  getUsersByIds: (ids: string[]) => Promise<UserInfo[]>
+  getProductsByIds: (ids: string[]) => Promise<Product[]>
 }
 
 export interface HeliaContextType {
@@ -335,4 +337,9 @@ export interface ProductReturn {
    * 延期收货次数
    */
   delayedCount: number
+}
+
+export interface ReturnReason {
+  reason: string,
+  images: string[]
 }

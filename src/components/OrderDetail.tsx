@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, CreditCard, Package2, Truck, RotateCcw, CheckCircle2, XCircle, Clock, AlertTriangle, Scale, Wallet } from 'lucide-react';
-import { Order, OrderStatus, ProductReturn } from '../types';
+import { Order, OrderStatus, ProductReturn, ReturnReason } from '../types';
 import { OrderProductInfo } from './OrderProductInfo';
 import { OrderAdditionalInfo } from './OrderAdditionalInfo';
 import { OrderTimeline } from './OrderTimeline';
@@ -14,6 +14,7 @@ import { useHelia } from '../context/HeliaContext';
 import { useToast } from '../context/ToastContext';
 import { useLoading } from '../context/LoadingContext';
 import { parseNULS } from 'nuls-api-v2';
+import { addJson, getJson } from '../utils/ipfs';
 
 interface OrderDetailProps {
     order: Order;
@@ -28,11 +29,18 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
     const { showToast } = useToast();
     const { showLoading, hideLoading } = useLoading();
     const [returnInfo, setReturnInfo] = useState<ProductReturn | undefined | null>()
+    const ctx = useHelia();
 
     useEffect(() => {
         const loadReturn = async () => {
             const info = await bitsflea!.getProductReturn(order.oid)
             console.log("return info:", info)
+            if (info) {
+                if (info.reasons != null && info.reasons != "" && info.reasons.startsWith("{") === false) {
+                    const reason = await getJson(ctx, info.reasons)
+                    info.reasons = JSON.stringify(reason)
+                }
+            }
             setReturnInfo(info)
         }
         if (bitsflea) {
@@ -62,11 +70,11 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
             } else if (amount.assetId === "0,0") {
                 callData.contractAddress = config.contracts.Point;
                 callData.methodName = "transferAndCall";
-                callData.args = [config.contracts.Bitsflea, parseNULS(amount.value, amount.decimals), order.oid];
+                callData.args = [config.contracts.Bitsflea, parseNULS(amount.value, amount.decimals).toString(10), order.oid];
             } else {
                 const asset = amount.assetId.split(",")
                 // @ts-ignore
-                callData.multyAssetValues = [[parseNULS(amount.value, amount.decimals), asset[0], asset[1]]]
+                callData.multyAssetValues = [[parseNULS(amount.value, amount.decimals).toString(10), asset[0], asset[1]]]
             }
             console.log("callData:", callData);
             const txHash = await window.nabox!.contractCall(callData);
@@ -84,6 +92,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
     };
 
     const handleConfirmReceipt = async () => {
+        showLoading()
         try {
             console.log('Confirming receipt for order:', order.oid);
             const callData = {
@@ -104,10 +113,13 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
             } else {
                 console.error('Error confirming receipt:', e);
             }
+        } finally {
+            hideLoading()
         }
     };
 
     const handleReConfirmReceipt = async () => {
+        showLoading()
         try {
             console.log('Confirming receipt for order:', order.oid);
             const callData = {
@@ -128,6 +140,8 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
             } else {
                 console.error('Error confirming receipt:', e);
             }
+        } finally {
+            hideLoading()
         }
     };
 
@@ -143,11 +157,42 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
         setShowReturnForm(true);
     };
 
-    const handleReturnSubmit = (data: { images: string[]; reason: string }) => {
+    const handleReturnSubmit = async (data: ReturnReason) => {
+        showLoading()
         console.log('Return request submitted:', { orderId: order.oid, ...data });
         setShowReturnForm(false);
-        // TODO: Implement return request submission
-        alert('Return request submitted successfully!');
+
+        const cid = await addJson(ctx, data)
+        console.log('IPFS CID:', cid);
+
+        if (!cid) {
+            showToast("error", "Image upload failed.");
+            hideLoading();
+            return;
+        }
+
+        try {
+            const callData = {
+                from: user!.uid,
+                value: 0,
+                contractAddress: config.contracts.Bitsflea,
+                methodName: "returns",
+                methodDesc: "",
+                args: [order.oid, cid],
+                multyAssetValues: []
+            }
+            console.log("callData:", callData);
+            const txHash = await window.nabox!.contractCall(callData);
+            await ctx?.nuls?.waitingResult(txHash);
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                showToast("error", e.message)
+            } else {
+                console.error("Unknown error");
+            }
+        } finally {
+            hideLoading()
+        }
     };
 
     const handleShipmentSubmit = async (data: { shipmentNumber: string }) => {
