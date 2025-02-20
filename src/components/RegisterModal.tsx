@@ -51,7 +51,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
       <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-900">完善个人信息</h2>
+          <h2 className="text-xl font-bold text-gray-900">Complete personal</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -82,13 +82,13 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
             </div>
-            <p className="text-sm text-gray-500">点击上传头像</p>
+            <p className="text-sm text-gray-500">Click to upload avatar</p>
           </div>
 
           {/* Wallet Address */}
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">钱包地址</span>
+              <span className="text-sm text-gray-500">Wallet Address</span>
               <span className="text-sm font-medium text-gray-900">{walletAddress}</span>
             </div>
           </div>
@@ -96,7 +96,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           {/* Phone */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              手机号码
+            Phone number
             </label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -105,7 +105,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 value={formData.phone}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="请输入手机号码"
+                placeholder="Please enter mobile number"
                 required
               />
             </div>
@@ -114,7 +114,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           {/* Nickname */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              昵称
+              Nickname
             </label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -123,7 +123,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 value={formData.nickname}
                 onChange={(e) => setFormData(prev => ({ ...prev, nickname: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="请输入昵称"
+                placeholder="Please enter nickname"
                 required
               />
             </div>
@@ -141,7 +141,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 value={formData.tg}
                 onChange={(e) => setFormData(prev => ({ ...prev, tg: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="请输入Telegram"
+                placeholder="Please enter Telegram"
                 required
               />
             </div>
@@ -150,7 +150,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           {/* Description */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              个人简介
+            Personal Profile
             </label>
             <div className="relative">
               <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -159,7 +159,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 rows={3}
                 className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-                placeholder="请输入个人简介"
+                placeholder="Please enter profile"
               />
             </div>
           </div>
@@ -170,14 +170,14 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
               type="submit"
               className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
             >
-              完成注册
+              Confirm
             </button>
             <button
               type="button"
               onClick={onClose}
               className="flex-1 border-2 border-gray-200 text-gray-600 px-6 py-3 rounded-xl hover:bg-gray-50 transition-colors"
             >
-              取消
+              Cancel
             </button>
           </div>
         </form>
