@@ -82,8 +82,9 @@ export const ReviewerList: React.FC = () => {
   };
 
   const hasVoted = (voted: string) => {
+    console.log("voted:", voted)
     const obj = JSON.parse(voted)
-    if (user) {
+    if (user && obj) {
       return Object.keys(obj).includes(user.uid)
     }
     return false
@@ -128,6 +129,33 @@ export const ReviewerList: React.FC = () => {
     });
   }, [reviewers, searchQuery, searchType]);
 
+  const handleApplyReviewer = async () => {
+    showLoading()
+    try {
+      const callData = {
+        from: user!.uid,
+        value: 0,
+        contractAddress: config.contracts.Bitsflea,
+        methodName: "appReviewer",
+        methodDesc: "",
+        args: [],
+        multyAssetValues: []
+      }
+      console.log("callData:", callData);
+      const txHash = await window.nabox!.contractCall(callData);
+      await nuls!.waitingResult(txHash);
+    } catch (e: any) {
+      if ("message" in e) {
+        showToast("error", e.message)
+      } else {
+        console.error("Unknown error:", e);
+      }
+    } finally {
+      hideLoading()
+    }
+
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pt-20 pb-12">
       <div className="max-w-4xl mx-auto px-4">
@@ -139,6 +167,12 @@ export const ReviewerList: React.FC = () => {
             <div className="text-sm text-blue-700">
               <p className="font-medium mb-1">About Reviewer Election</p>
               <p>Reviewers are responsible for verifying product information on the platform to ensure authenticity and reliability. You can vote to support trusted users to become reviewers. Reviewers must maintain good credit scores and receive broad community recognition.</p>
+              <br />
+              {user && user.isReviewer == false && (
+                <button onClick={handleApplyReviewer} className='flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100'>
+                  Apply Reviewer
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -187,7 +221,7 @@ export const ReviewerList: React.FC = () => {
                 key={reviewer.uid}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300 relative"
               >
-                {reviewer.isReviewer && (
+                {!!reviewer.isReviewer && (
                   <div className="absolute top-4 right-4 bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full flex items-center gap-1.5">
                     <Shield className="h-4 w-4 fill-current" />
                     <span className="text-sm font-medium">Reviewer</span>
