@@ -1,4 +1,4 @@
-import { Sparkles, Smartphone, Gamepad2, Sparkle, Home, Shirt, BookOpen } from 'lucide-react';
+import { Sparkles, Smartphone, Gamepad2, Sparkle, Home, Shirt, BookOpen, Album } from 'lucide-react';
 
 export const categories = [
     { name: 'Featured', icon: Sparkles, value: undefined },
@@ -8,6 +8,7 @@ export const categories = [
     { name: 'Home', icon: Home, value: 4 },
     { name: 'Fashion', icon: Shirt, value: 5 },
     { name: 'Books', icon: BookOpen, value: 6 },
+    { name: 'Virtual', icon: Album, value: 7 }
 ];
 
 export function getCategoryByValue(value: number) {
