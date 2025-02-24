@@ -59,6 +59,21 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, search
     setLoading(false);
   };
 
+  const handleBuy = (product: Product, quantity: number) => {
+    if (product.isRetail && product.stockCount - quantity > 0) {
+      let p = displayedProducts.find((v) => v.pid == product.pid)
+      if (p) {
+        p.stockCount -= quantity;
+        setDisplayedProducts([...displayedProducts])
+      }
+    } else {
+      let index = displayedProducts.findIndex((v) => v.pid == product.pid)
+      if (index > -1) {
+        setDisplayedProducts([...displayedProducts.splice(index)])
+      }
+    }
+  }
+
   if (displayedProducts.length === 0) {
     return (
       <div className="text-center py-12">
@@ -76,7 +91,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, search
     >
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {displayedProducts.map(product => (
-          <ProductCard key={product.pid} product={product} />
+          <ProductCard key={product.pid} product={product} onBuy={handleBuy} />
         ))}
       </div>
     </InfiniteScroll>
