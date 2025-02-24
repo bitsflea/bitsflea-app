@@ -10,6 +10,7 @@ import { QuantityDialog } from './QuantityDialog';
 import { useLoading } from '../context/LoadingContext';
 import { useAuth } from '../context/AuthContext';
 import config from '../data/config';
+import { ErrorInfo } from '../data/error';
 
 interface ProductCardProps {
   product: Product;
@@ -18,6 +19,7 @@ interface ProductCardProps {
   onDelist?: (productId: string) => void;
   onClick?: () => void;
   onReview?: (productId: string, approved: boolean, reason: string) => void;
+  onBuy?: (product: Product, quantity: number) => void
 }
 
 const StatusBadge: React.FC<{ status: ProductStatus }> = ({ status }) => {
@@ -79,7 +81,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isReview = false,
   onDelist,
   onClick,
-  onReview
+  onReview,
+  onBuy
 }) => {
   const [showDetail, setShowDetail] = useState(false);
   const [productInfo, setProductInfo] = useState<ProductInfo>(defaultProductInfo);
@@ -156,14 +159,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       console.log("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await ctx?.nuls?.waitingResult(txHash);
-    } catch (e: unknown) {
-      if (e instanceof Error) {
+    } catch (e: any) {
+      if (e instanceof Error || (typeof e === "object" && "message" in e)) {
         showToast("error", e.message)
+      } else if (typeof e === "string") {
+        let info = ErrorInfo.get(e.replace(/\"/g, ""))
+        let msg = info ? info : e
+        showToast("error", msg)
       } else {
         console.error("Unknown error");
       }
+    } finally {
+      hideLoading()
+      if (onBuy) {
+        onBuy(product, quantity);
+      }
     }
-    hideLoading()
   }
 
   const onQuantityClose = () => {

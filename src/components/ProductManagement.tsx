@@ -151,12 +151,36 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
   };
 
 
-  const handleDelist = (productId: string) => {
-    setManagedProducts(prev => prev.map(product =>
-      product.pid === productId
-        ? { ...product, status: ProductStatus.DELISTED }
-        : product
-    ));
+  const handleDelist = async (productId: string) => {
+    showLoading();
+    try {
+      const callData = {
+        from: user!.uid,
+        value: 0,
+        contractAddress: config.contracts.Bitsflea,
+        methodName: "delist",
+        methodDesc: "",
+        args: [productId],
+        multyAssetValues: []
+      }
+      console.log("callData:", callData);
+      const txHash = await window.nabox!.contractCall(callData);
+      await ctx?.nuls?.waitingResult(txHash);
+
+      setManagedProducts(prev => prev.map(product =>
+        product.pid === productId
+          ? { ...product, status: ProductStatus.DELISTED }
+          : product
+      ));
+    } catch (e: any) {
+      if ("message" in e) {
+        showToast("error", e.message)
+      } else {
+        console.error("Unknown error");
+      }
+    } finally {
+      hideLoading();
+    }
   };
 
   return (

@@ -98,7 +98,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
 
   const handleBuy = async () => {
     try {
-      // TODO: Implement NaBox wallet integration
       console.log('Buying product:', product);
       if (product.isRetail && product.stockCount > 1) {
         setShowQuantity(true);
