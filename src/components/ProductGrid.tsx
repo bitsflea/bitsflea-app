@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ProductCard } from './ProductCard';
 import { Product } from '../types';
 import { useHelia } from '../context/HeliaContext';
-import { useToast } from '../context/ToastContext';
 import { InfiniteScroll } from './InfiniteScroll';
+import { safeExecuteAsync } from '../data/error';
 
 interface ProductGridProps {
   searchQuery?: string;
@@ -18,24 +18,16 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, search
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const { rpc } = useHelia();
-  const { showToast } = useToast();
 
   useEffect(() => {
     const getProducts = async () => {
-      try {
+      await safeExecuteAsync(async () => {
         const data = await rpc!.request("getProducts", [page, ITEMS_PER_PAGE, activeCategory, null, null, searchQuery]);
         console.log("data:", data);
         setDisplayedProducts(data.result);
         setPage(1);
         setHasMore(data.result.length > ITEMS_PER_PAGE);
-      } catch (e: unknown) {
-        if (e instanceof Error) {
-          showToast("error", e.message);
-        } else {
-          console.log("getProducts:", e);
-        }
-      }
-
+      }, "getProducts:")
     }
     if (rpc) {
       getProducts();

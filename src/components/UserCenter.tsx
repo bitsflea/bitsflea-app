@@ -15,7 +15,7 @@ import { useHelia } from '../context/HeliaContext';
 import config from '../data/config';
 import { formatDate } from '../utils/date';
 import { useLoading } from '../context/LoadingContext';
-import { useToast } from '../context/ToastContext';
+import { safeExecuteAsync } from '../data/error';
 
 
 const tabs = [
@@ -34,7 +34,6 @@ export const UserCenter: React.FC = () => {
   const { user, login } = useAuth();
   const ctx = useHelia();
   const { showLoading, hideLoading } = useLoading();
-  const { showToast } = useToast();
 
   // console.log("user:", user)
 
@@ -51,8 +50,8 @@ export const UserCenter: React.FC = () => {
   const handleProfileSave = async (data: { avatar: string; nickname: string; description: string, tg: string }) => {
     showLoading()
     console.log('Profile updated:', data);
-    try {
-      let eInfo:any = await getUserExtendInfo(ctx, user!.extendInfo, 5000);
+    await safeExecuteAsync(async () => {
+      let eInfo: any = await getUserExtendInfo(ctx, user!.extendInfo, 5000);
       console.log("eInfo:", eInfo);
       eInfo.d = data.description;
       eInfo.tg = data.tg;
@@ -89,14 +88,9 @@ export const UserCenter: React.FC = () => {
         const newUser = await ctx?.bitsflea?.getUser(user!.uid);
         login(newUser!);
       }
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        showToast("error", e.message)
-      } else {
-        console.error("Unknown error");
-      }
-    }
-    hideLoading()
+    }, undefined, () => {
+      hideLoading()
+    })
   };
 
   const renderTabContent = () => {

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { CheckCircle, AlertCircle, XCircle, X } from 'lucide-react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { CheckCircle, AlertCircle, X } from 'lucide-react';
+import EventEmitter from 'events';
 
 type ToastType = 'success' | 'error';
 
@@ -15,8 +16,27 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | null>(null);
 
+const toastEmitter = new EventEmitter();
+
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [toasts, setToasts] = useState<Toast[]>([]);
+
+    useEffect(() => {
+        // 监听全局事件，并显示 Toast 消息
+        const showToastListener = (message: string) => {
+            try {
+                const obj = JSON.parse(message)
+                showToast(obj.type, obj.message)
+            } catch { }
+        };
+
+        toastEmitter.on('showToast', showToastListener)
+
+        // 清理事件监听
+        return () => {
+            toastEmitter.off('showToast', showToastListener)
+        };
+    }, []);
 
     const removeToast = useCallback((id: number) => {
         setToasts(prev => prev.filter(toast => toast.id !== id));
@@ -77,3 +97,7 @@ export const useToast = () => {
     }
     return context;
 };
+
+export const showToastGlobal = (type: ToastType, message: string) => {
+    toastEmitter.emit('showToast', JSON.stringify({ type, message }))
+}

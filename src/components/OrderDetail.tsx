@@ -15,6 +15,7 @@ import { useToast } from '../context/ToastContext';
 import { useLoading } from '../context/LoadingContext';
 import { parseNULS } from 'nuls-api-v2';
 import { addJson, getJson } from '../utils/ipfs';
+import { safeExecuteAsync } from '../data/error';
 
 interface OrderDetailProps {
     order: Order;
@@ -33,15 +34,17 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
 
     useEffect(() => {
         const loadReturn = async () => {
-            const info = await bitsflea!.getProductReturn(order.oid)
-            console.log("return info:", info)
-            if (info) {
-                if (info.reasons != null && info.reasons != "" && info.reasons.startsWith("{") === false) {
-                    const reason = await getJson(ctx, info.reasons)
-                    info.reasons = JSON.stringify(reason)
+            await safeExecuteAsync(async () => {
+                const info = await bitsflea!.getProductReturn(order.oid)
+                console.log("return info:", info)
+                if (info) {
+                    if (info.reasons != null && info.reasons != "" && info.reasons.startsWith("{") === false) {
+                        const reason = await getJson(ctx, info.reasons)
+                        info.reasons = JSON.stringify(reason)
+                    }
                 }
-            }
-            setReturnInfo(info)
+                setReturnInfo(info)
+            })
         }
         if (bitsflea) {
             loadReturn()
@@ -50,7 +53,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
 
     const handlePayment = async () => {
         showLoading();
-        try {
+        await safeExecuteAsync(async () => {
             console.log('Processing payment for order:', order);
             const amount = getPrice(order.amount);
             const postage = getPrice(order.postage);
@@ -80,20 +83,14 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
             const txHash = await window.nabox!.contractCall(callData);
             await nuls?.waitingResult(txHash);
             onClose();
-        } catch (e: unknown) {
-            if (e instanceof Error) {
-                showToast("error", e.message)
-            } else {
-                console.error("Unknown error");
-            }
-        } finally {
+        }, "payment error:", () => {
             hideLoading();
-        }
+        })
     };
 
     const handleConfirmReceipt = async () => {
         showLoading()
-        try {
+        await safeExecuteAsync(async () => {
             console.log('Confirming receipt for order:', order.oid);
             const callData = {
                 from: user!.uid,
@@ -107,20 +104,14 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
             const txHash = await window.nabox!.contractCall(callData);
             await nuls?.waitingResult(txHash);
             onClose();
-        } catch (e: unknown) {
-            if (e instanceof Error) {
-                showToast("error", e.message)
-            } else {
-                console.error('Error confirming receipt:', e);
-            }
-        } finally {
+        }, "Error confirming receipt:", () => {
             hideLoading()
-        }
+        })
     };
 
     const handleReConfirmReceipt = async () => {
         showLoading()
-        try {
+        await safeExecuteAsync(async () => {
             console.log('Confirming receipt for order:', order.oid);
             const callData = {
                 from: user!.uid,
@@ -134,15 +125,9 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
             const txHash = await window.nabox!.contractCall(callData);
             await nuls?.waitingResult(txHash);
             onClose();
-        } catch (e: unknown) {
-            if (e instanceof Error) {
-                showToast("error", e.message)
-            } else {
-                console.error('Error confirming receipt:', e);
-            }
-        } finally {
+        }, "Error confirming receipt:", () => {
             hideLoading()
-        }
+        })
     };
 
     const handleShipping = async () => {
@@ -171,7 +156,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
             return;
         }
 
-        try {
+        await safeExecuteAsync(async () => {
             const callData = {
                 from: user!.uid,
                 value: 0,
@@ -184,15 +169,9 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
             console.log("callData:", callData);
             const txHash = await window.nabox!.contractCall(callData);
             await ctx?.nuls?.waitingResult(txHash);
-        } catch (e: unknown) {
-            if (e instanceof Error) {
-                showToast("error", e.message)
-            } else {
-                console.error("Unknown error");
-            }
-        } finally {
+        }, undefined, () => {
             hideLoading()
-        }
+        })
     };
 
     const handleShipmentSubmit = async (data: { shipmentNumber: string }) => {

@@ -10,7 +10,7 @@ import { QuantityDialog } from './QuantityDialog';
 import { useLoading } from '../context/LoadingContext';
 import { useAuth } from '../context/AuthContext';
 import config from '../data/config';
-import { ErrorInfo } from '../data/error';
+import { ErrorInfo, safeExecuteAsync } from '../data/error';
 
 interface ProductCardProps {
   product: Product;
@@ -94,17 +94,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   useEffect(() => {
     const loadProductInfo = async () => {
-      try {
+      await safeExecuteAsync(async () => {
         const info = await getProductInfo(ctx, product, 5000);
         // console.log("info:", info);
         setProductInfo(info);
-      } catch (e: unknown) {
-        if (e instanceof Error) {
-          showToast("error", e.message)
-        } else {
-          console.log(e);
-        }
-      }
+      })
     }
     if (ctx && ctx.fs) {
       loadProductInfo()
@@ -146,7 +140,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       hideLoading();
       return;
     }
-    try {
+    await safeExecuteAsync(async () => {
       const callData = {
         from: user!.uid,
         value: 0,
@@ -159,22 +153,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       console.log("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await ctx?.nuls?.waitingResult(txHash);
-    } catch (e: any) {
-      if (e instanceof Error || (typeof e === "object" && "message" in e)) {
-        showToast("error", e.message)
-      } else if (typeof e === "string") {
-        let info = ErrorInfo.get(e.replace(/\"/g, ""))
-        let msg = info ? info : e
-        showToast("error", msg)
-      } else {
-        console.error("Unknown error");
-      }
-    } finally {
+    }, undefined, () => {
       hideLoading()
       if (onBuy) {
         onBuy(product, quantity);
       }
-    }
+    })
   }
 
   const onQuantityClose = () => {

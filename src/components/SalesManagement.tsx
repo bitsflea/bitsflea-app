@@ -5,8 +5,8 @@ import { OrderItem } from './OrderItem';
 import { OrderDetail } from './OrderDetail';
 import { useAuth } from '../context/AuthContext';
 import { useHelia } from '../context/HeliaContext';
-import { useToast } from '../context/ToastContext';
 import { InfiniteScroll } from './InfiniteScroll';
+import { safeExecuteAsync } from '../data/error';
 
 const statusFilters: { value: OrderStatus | 'all'; label: string; icon: React.ElementType }[] = [
   { value: 'all', label: 'All Orders', icon: Filter },
@@ -30,7 +30,6 @@ export const SalesManagement: React.FC = ({ }) => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const { rpc } = useHelia();
-  const { showToast } = useToast();
 
   const activeFilterLabel = statusFilters.find(f => f.value === activeFilter)?.label;
   const ActiveFilterIcon = statusFilters.find(f => f.value === activeFilter)?.icon || Filter;
@@ -39,10 +38,11 @@ export const SalesManagement: React.FC = ({ }) => {
     const loadorders = async () => {
       setOrders([]);
       const params = [user!.uid, page, ITEMS_PER_PAGE, activeFilter == 'all' ? undefined : activeFilter, true]
-      const data = await rpc!.request("getOrders", params);
+      const data = await safeExecuteAsync(async () => {
+        return rpc!.request("getOrders", params)
+      })
       console.log("fetchOrders data:", data);
-      if ("error" in data) {
-        showToast("error", data.error.message);
+      if (data == null) {
         return;
       }
       setOrders(data.result);

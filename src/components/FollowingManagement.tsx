@@ -5,7 +5,7 @@ import { Shop, UserInfo } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useHelia } from '../context/HeliaContext';
 import { delFollowing, getUserData, KEY_FOLLOWING } from '../utils/db';
-import { useToast } from '../context/ToastContext';
+import { safeExecuteAsync } from '../data/error';
 
 
 export const FollowingManagement: React.FC = ({
@@ -13,15 +13,14 @@ export const FollowingManagement: React.FC = ({
   const { user } = useAuth()
   const { userDB, rpc, bitsflea } = useHelia()
   const [shops, setShops] = useState<Shop[]>([])
-  const { showToast } = useToast();
 
   useEffect(() => {
     const loadFollowing = async () => {
       const ids = await getUserData(userDB, user!.uid, KEY_FOLLOWING)
       if (ids.length > 0) {
-        // console.log("ids:", ids)
-        // const data = await rpc!.request("getUsersByIds", [ids]);
-        try {
+        await safeExecuteAsync(async () => {
+          // console.log("ids:", ids)
+          // const data = await rpc!.request("getUsersByIds", [ids]);
           const data = await bitsflea!.getUsersByIds(ids)
           // console.log("data:", data)
           const _shops = data.map((v: UserInfo) => {
@@ -37,13 +36,7 @@ export const FollowingManagement: React.FC = ({
             } as Shop
           })
           setShops(_shops)
-        } catch (e: unknown) {
-          if (e instanceof Error) {
-            showToast("error", e.message)
-          } else {
-            console.error('Error getUsersByIds:', e);
-          }
-        }
+        }, "Error getUsersByIds:")
       }
     }
     if (user && rpc) {
