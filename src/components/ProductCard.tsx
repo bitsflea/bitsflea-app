@@ -10,7 +10,7 @@ import { QuantityDialog } from './QuantityDialog';
 import { useLoading } from '../context/LoadingContext';
 import { useAuth } from '../context/AuthContext';
 import config from '../data/config';
-import { ErrorInfo, safeExecuteAsync } from '../data/error';
+import { safeExecuteAsync } from '../data/error';
 
 interface ProductCardProps {
   product: Product;
@@ -90,7 +90,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const { showToast } = useToast();
   const [showQuantity, setShowQuantity] = useState(false);
   const { showLoading, hideLoading } = useLoading();
-  const { user } = useAuth();
+  const { user, isAuthenticated, loginEmitter } = useAuth();
 
   useEffect(() => {
     const loadProductInfo = async () => {
@@ -116,8 +116,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleBuy = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isAuthenticated) {
+      loginEmitter.emit("showLogin")
+      return
+    }
     try {
-      // TODO: Implement NaBox wallet integration
       console.log('Buying product:', product);
       if (product.isRetail && product.stockCount > 1) {
         setShowQuantity(true);

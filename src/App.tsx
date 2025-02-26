@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { ProductGrid } from './components/ProductGrid';
 import { SearchBar } from './components/SearchBar';
@@ -11,6 +11,7 @@ import { Footer } from './components/Footer';
 import { BackToTop } from './components/BackToTop';
 import { useAuth } from './context/AuthContext';
 
+
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<number | undefined | null>(null);
   const [showUserCenter, setShowUserCenter] = useState(false);
@@ -18,7 +19,20 @@ export default function App() {
   const [showReviewerList, setShowReviewerList] = useState(false);
   const [showProductReview, setShowProductReview] = useState(false);
   const [query, setQuery] = useState('');
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout, user, loginEmitter } = useAuth();
+
+  useEffect(() => {
+    const showLoginListener = () => {
+      setShowLoginModal(true)
+    };
+
+    loginEmitter.on('showLogin', showLoginListener)
+
+    // 清理事件监听
+    return () => {
+      loginEmitter.off('showLogin', showLoginListener)
+    };
+  }, [])
 
   const handleUserClick = () => {
     if (isAuthenticated) {
