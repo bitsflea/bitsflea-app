@@ -8,6 +8,7 @@ import { ExtendInfo } from './ExtendInfo';
 import { useLoading } from '../context/LoadingContext';
 import config from '../data/config';
 import { useToast } from '../context/ToastContext';
+import { safeExecuteAsync } from '../data/error';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -93,7 +94,7 @@ export const ReviewerList: React.FC = () => {
   const handleVote = async (reviewerId: string, voteType: 'up' | 'down') => {
     console.log(reviewerId, voteType)
     showLoading();
-    try {
+    await safeExecuteAsync(async () => {
       const callData = {
         from: user!.uid,
         value: 0,
@@ -106,13 +107,7 @@ export const ReviewerList: React.FC = () => {
       console.log("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await nuls?.waitingResult(txHash);
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        showToast("error", e.message)
-      } else {
-        console.error("Unknown error:", e);
-      }
-    }
+    })
     hideLoading();
   };
 
@@ -131,7 +126,7 @@ export const ReviewerList: React.FC = () => {
 
   const handleApplyReviewer = async () => {
     showLoading()
-    try {
+    await safeExecuteAsync(async () => {
       const callData = {
         from: user!.uid,
         value: 0,
@@ -144,16 +139,8 @@ export const ReviewerList: React.FC = () => {
       console.log("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await nuls!.waitingResult(txHash);
-    } catch (e: any) {
-      if ("message" in e) {
-        showToast("error", e.message)
-      } else {
-        console.error("Unknown error:", e);
-      }
-    } finally {
-      hideLoading()
-    }
-
+    })
+    hideLoading()
   };
 
   return (

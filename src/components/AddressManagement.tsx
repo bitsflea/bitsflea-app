@@ -5,7 +5,7 @@ import { AddressEditor } from './AddressEditor';
 import { useHelia } from '../context/HeliaContext';
 import { getAddresses, setAddresses } from '../utils/db';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import { safeExecuteAsync } from '../data/error';
 
 interface AddressManagementProps {
   onAddAddress: (address: Address) => void;
@@ -21,7 +21,6 @@ export const AddressManagement: React.FC<AddressManagementProps> = ({
   const [addresses, setAddress] = useState<Address[]>([])
   const { user } = useAuth()
   const { userDB } = useHelia()
-  const { showToast } = useToast();
 
   const handleEdit = (address: Address) => {
     setEditingAddress(address);
@@ -30,19 +29,13 @@ export const AddressManagement: React.FC<AddressManagementProps> = ({
 
   useEffect(() => {
     const loadAddress = async () => {
-      try {
+      await safeExecuteAsync(async () => {
         let data = await getAddresses(userDB, user!.uid)
         // console.log("data:", data)
         if (data) {
           setAddress(data)
         }
-      } catch (e: any) {
-        if ("message" in e) {
-          showToast("error", e.message);
-        } else {
-          console.log("loadAddress:", e);
-        }
-      }
+      }, "loadAddress:")
     }
     loadAddress()
   }, [])

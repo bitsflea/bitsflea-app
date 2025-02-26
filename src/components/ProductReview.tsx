@@ -3,10 +3,10 @@ import { Search, AlertCircle, Shield } from 'lucide-react';
 import { ProductCard } from './ProductCard';
 import { Product } from '../types';
 import { useHelia } from '../context/HeliaContext';
-import { useToast } from '../context/ToastContext';
 import { useLoading } from '../context/LoadingContext';
 import { useAuth } from '../context/AuthContext';
 import config from '../data/config';
+import { safeExecuteAsync } from '../data/error';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -18,27 +18,19 @@ export const ProductReview: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const { showLoading, hideLoading } = useLoading();
-  const { showToast } = useToast();
   const loaderRef = useRef<HTMLDivElement>(null);
 
   const { user } = useAuth();
 
   useEffect(() => {
     const getProducts = async () => {
-      try {
+      await safeExecuteAsync(async () => {
         const data = await rpc!.request("getProducts", [page, ITEMS_PER_PAGE, null, null, 0]);
         console.log("get review products:", data);
         setProducts(data.result);
         setPage(1);
         setHasMore(data.result.length > ITEMS_PER_PAGE);
-      } catch (e: unknown) {
-        if (e instanceof Error) {
-          showToast("error", e.message);
-        } else {
-          console.log("getProducts:", e);
-        }
-      }
-
+      }, "getProducts:")
     };
     if (rpc) {
       getProducts();
@@ -92,7 +84,7 @@ export const ProductReview: React.FC = () => {
   const handleReview = async (productId: string, approved: boolean, reason: string) => {
     console.log(productId, approved, reason)
     showLoading()
-    try {
+    await safeExecuteAsync(async () => {
       const callData = {
         from: user!.uid,
         value: 0,
@@ -105,14 +97,9 @@ export const ProductReview: React.FC = () => {
       console.log("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await nuls?.waitingResult(txHash);
-    } catch (e: any) {
-      if (e instanceof Error || "message" in e) {
-        showToast("error", e.message)
-      } else {
-        console.error("Unknown error:", e);
-      }
-    }
-    hideLoading()
+    }, undefined, () => {
+      hideLoading()
+    })
   }
 
   return (

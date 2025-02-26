@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { QuantityDialog } from './QuantityDialog';
 import { useLoading } from '../context/LoadingContext';
 import config from '../data/config';
+import { safeExecuteAsync } from '../data/error';
 
 interface ProductDetailProps {
   product: Product;
@@ -47,17 +48,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
 
   useEffect(() => {
     const loadProductInfo = async () => {
-      try {
+      await safeExecuteAsync(async () => {
         const info = await getProductInfo(ctx, product, 5000);
         // console.log("info:", info);
         productInfo = info;
-      } catch (e: unknown) {
-        if (e instanceof Error) {
-          showToast("error", e.message)
-        } else {
-          console.log(e);
-        }
-      }
+      })
     }
     if (ctx && ctx.fs) {
       loadProductInfo()
@@ -120,7 +115,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
       hideLoading();
       return;
     }
-    try {
+    await safeExecuteAsync(async () => {
       const callData = {
         from: user!.uid,
         value: 0,
@@ -134,14 +129,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
       const txHash = await window.nabox!.contractCall(callData);
       await ctx?.nuls?.waitingResult(txHash);
       onClose();
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        showToast("error", e.message)
-      } else {
-        console.error("Unknown error");
-      }
-    }
-    hideLoading()
+    }, undefined, () => {
+      hideLoading()
+    })
   }
 
   const onQuantityClose = () => {

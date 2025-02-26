@@ -77,3 +77,12 @@ export const useToast = () => {
     }
     return context;
 };
+
+export const showToastGlobal = (type: ToastType, message: string) => {
+    const context = useContext(ToastContext);
+    if (context) {
+        context.showToast(type, message);
+    } else {
+        console.error('Toast context is not available.');
+    }
+}

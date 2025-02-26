@@ -11,6 +11,7 @@ import { useLoading } from '../context/LoadingContext';
 import { parseNULS } from 'nuls-api-v2';
 import { useToast } from '../context/ToastContext';
 import { getCurrency } from '../utils/tools';
+import { safeExecuteAsync } from '../data/error';
 
 interface ProductManagementProps {
   // products: Product[];
@@ -125,7 +126,7 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
       return;
     }
 
-    try {
+    await safeExecuteAsync(async () => {
       const position = `${data.location.coordinates.lat},${data.location.coordinates.lng}|${data.location.country},${data.location.region},${data.location.district}`
       const currency = getCurrency(data.currency);
       const callData = {
@@ -140,20 +141,15 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
       console.log("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await ctx?.nuls?.waitingResult(txHash);
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        showToast("error", e.message)
-      } else {
-        console.error("Unknown error");
-      }
-    }
-    hideLoading();
+    }, undefined, () => {
+      hideLoading();
+    })
   };
 
 
   const handleDelist = async (productId: string) => {
     showLoading();
-    try {
+    await safeExecuteAsync(async () => {
       const callData = {
         from: user!.uid,
         value: 0,
@@ -172,15 +168,9 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
           ? { ...product, status: ProductStatus.DELISTED }
           : product
       ));
-    } catch (e: any) {
-      if ("message" in e) {
-        showToast("error", e.message)
-      } else {
-        console.error("Unknown error");
-      }
-    } finally {
+    }, undefined, () => {
       hideLoading();
-    }
+    })
   };
 
   return (
