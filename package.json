@@ -15,6 +15,7 @@
     "@helia/unixfs": "^4.0.1",
     "@orbitdb/core": "^2.4.3",
     "blockstore-idb": "^2.0.1",
+    "events": "^3.3.0",
     "helia": "^5.1.1",
     "it-drain": "^3.0.7",
     "jayson": "^4.1.3",
