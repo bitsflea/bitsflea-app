@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Filter, ChevronDown, CreditCard, Package2, Truck, RotateCcw, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Filter, ChevronDown, CreditCard, Package2, Truck, RotateCcw, CheckCircle2, XCircle } from 'lucide-react';
 import { Order, OrderStatus } from '../types';
 import { OrderItem } from './OrderItem';
 import { OrderDetail } from './OrderDetail';
