@@ -297,3 +297,12 @@ export async function getJson<T>(ctx: HeliaContextType | null, cid: string, time
     }
     return defaultInfo;
 }
+
+export function isCid(str: string) {
+    try {
+        CID.parse(str)
+    } catch {
+        return false
+    }
+    return true
+}

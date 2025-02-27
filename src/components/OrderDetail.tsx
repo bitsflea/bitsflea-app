@@ -409,6 +409,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                             seller={order.seller}
                             shipmentNumber={order.shipmentNumber}
                             delayedCount={order.delayedCount}
+                            deliveryInfo={order.receiptInfo}
                         />
 
                         {/* Order Timeline */}
