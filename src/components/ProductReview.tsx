@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Search, AlertCircle, Shield } from 'lucide-react';
+import { AlertCircle, Shield } from 'lucide-react';
 import { ProductCard } from './ProductCard';
 import { Product } from '../types';
 import { useHelia } from '../context/HeliaContext';

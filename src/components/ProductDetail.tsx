@@ -5,7 +5,7 @@ import { ImageCarousel } from './ImageCarousel';
 // import { Chat } from './Chat';
 import { ReviewForm } from './ReviewForm';
 import { getCategoryByValue } from '../data/categories';
-import { defaultProductInfo, getProductInfo, getUserExtendInfo } from '../utils/ipfs';
+import { getProductInfo, getUserExtendInfo } from '../utils/ipfs';
 import { useHelia } from '../context/HeliaContext';
 import { useToast } from '../context/ToastContext';
 import { addFavorite, addFollowing, delFavorite, delFollowing, hasFavorite, hasFollowing } from '../utils/db';

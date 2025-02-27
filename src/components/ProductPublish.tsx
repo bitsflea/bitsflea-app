@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Upload, Plus, Trash2 } from 'lucide-react';
+import { X, Upload, Trash2 } from 'lucide-react';
 import { categories } from '../data/categories';
 import { LocationValue, ProductStatus } from '../types';
 import { GoogleMapsLocationSelector } from './GoogleMapsLocationSelector';

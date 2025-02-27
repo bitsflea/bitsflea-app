@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, MapPin, Settings, Star, Trash2 } from 'lucide-react';
+import { Plus, MapPin } from 'lucide-react';
 import { Address } from '../types';
 import { AddressEditor } from './AddressEditor';
 import { useHelia } from '../context/HeliaContext';
