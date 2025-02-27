@@ -8,6 +8,7 @@ import { Nabox, UserInfo } from '../types';
 import { getHash } from '../utils/nuls';
 import { addImages, addUserExtendInfo } from '../utils/ipfs';
 import { safeExecuteAsync } from '../data/error';
+import { useLoading } from '../context/LoadingContext';
 
 declare global {
   interface Window {
@@ -27,12 +28,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
   const [showRegister, setShowRegister] = useState(false);
   const [connectedAddress, setConnectedAddress] = useState<string>('');
   const ctx = useHelia();
+  const { showLoading, hideLoading } = useLoading();
 
   // Get user info from localStorage
   const mockFetchUserInfo = async (address: string): Promise<UserInfo | null | undefined> => {
-    // console.log("ctx:", ctx);
     const userInfo = await ctx!.bitsflea!.getUser(address);
-    console.log("userInfo:", userInfo);
+    console.debug("userInfo:", userInfo);
 
     // Save to localStorage
     localStorage.setItem('userInfo', JSON.stringify(userInfo));
@@ -43,12 +44,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
     if (walletType === 'nabox') {
       if ('nabox' in window) {
         const naboxInfo = await window.nabox!.createSession();
-        console.log("naboxInfo:", naboxInfo)
+        console.debug("naboxInfo:", naboxInfo)
         if (naboxInfo && naboxInfo.length > 0) {
           setConnectedAddress(naboxInfo[0]);
           await safeExecuteAsync(async () => {
             const userInfo = await mockFetchUserInfo(naboxInfo[0]);
-            console.log("userInfo:", userInfo)
+            console.debug("userInfo:", userInfo)
 
             if (userInfo) {
               // User exists, proceed with login
@@ -69,7 +70,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
   };
 
   const handleRegister = async (info: any) => {
-    console.log("info:", info)
+    console.debug("info:", info)
+    showLoading()
     //Create new user
     const phoneHash = getHash(info.phone);
     const phoneEncrypt = "";  //TODO: Encrypt phone number
@@ -77,27 +79,31 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
     const avatar = info.avatar.startsWith("http") ? info.avatar : (await addImages(ctx, [info.avatar]))[0];
     const extendInfo = await addUserExtendInfo(ctx, { x: "", tg: info.tg, e: "", d: info.description });
 
-    const data = {
-      from: connectedAddress,
-      value: 0,
-      contractAddress: config.contracts.Bitsflea,
-      methodName: "regUser",
-      methodDesc: "",
-      args: [info.nickname, phoneHash, phoneEncrypt, referrer, avatar, extendInfo],
-      multyAssetValues: []
-    }
-    const txHash = await window.nabox!.contractCall(data);
-    await ctx?.nuls?.waitingResult(txHash);
+    await safeExecuteAsync(async () => {
+      const data = {
+        from: connectedAddress,
+        value: 0,
+        contractAddress: config.contracts.Bitsflea,
+        methodName: "regUser",
+        methodDesc: "",
+        args: [info.nickname, phoneHash, phoneEncrypt, referrer, avatar, extendInfo],
+        multyAssetValues: []
+      }
+      const txHash = await window.nabox!.contractCall(data);
+      await ctx?.nuls?.waitingResult(txHash);
 
-    const newUser = await ctx?.bitsflea?.getUser(connectedAddress);
-    // console.log("newUser:", newUser);
-    if (newUser) {
-      // Login
-      login(newUser!);
-      onSuccess();
-    } else {
-      console.error('Failed to register user');
-    }
+      const newUser = await ctx?.bitsflea?.getUser(connectedAddress);
+      console.debug("newUser:", newUser);
+      if (newUser) {
+        // Login
+        login(newUser!);
+        onSuccess();
+      } else {
+        console.error('Failed to register user');
+      }
+    }, undefined, () => {
+      hideLoading()
+    })
   };
 
   if (showRegister) {

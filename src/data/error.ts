@@ -61,7 +61,7 @@ export const safeExecuteAsync = async (callback: Function, errorTitle?: string, 
         }
         return result
     } catch (e: any) {
-        console.log(e)
+        console.debug(e)
         if (e instanceof Error || (typeof e === "object" && "message" in e)) {
             showToastGlobal("error", e.message)
         } else if (typeof e === "string") {

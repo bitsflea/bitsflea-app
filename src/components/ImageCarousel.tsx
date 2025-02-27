@@ -22,7 +22,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
     const fetchImages = async () => {
       setLoading(true)
       const _localImages = await getImages(heliaContext, images)
-      // console.log("_localImages:", _localImages)
+      console.debug("_localImages:", _localImages)
       setLoading(false)
       setLocalImages(_localImages)
     }

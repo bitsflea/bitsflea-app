@@ -36,7 +36,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
         const loadReturn = async () => {
             await safeExecuteAsync(async () => {
                 const info = await bitsflea!.getProductReturn(order.oid)
-                console.log("return info:", info)
+                console.debug("return info:", info)
                 if (info) {
                     if (info.reasons != null && info.reasons != "" && info.reasons.startsWith("{") === false) {
                         const reason = await getJson(ctx, info.reasons)
@@ -54,11 +54,11 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
     const handlePayment = async () => {
         showLoading();
         await safeExecuteAsync(async () => {
-            console.log('Processing payment for order:', order);
+            console.debug('Processing payment for order:', order);
             const amount = getPrice(order.amount);
             const postage = getPrice(order.postage);
             amount.value += postage.value;
-            console.log("amount:", amount.value)
+            console.debug("amount:", amount.value)
             const callData = {
                 from: user!.uid,
                 value: 0,
@@ -79,7 +79,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                 // @ts-ignore
                 callData.multyAssetValues = [[parseNULS(amount.value, amount.decimals).toString(10), asset[0], asset[1]]]
             }
-            console.log("callData:", callData);
+            console.debug("callData:", callData);
             const txHash = await window.nabox!.contractCall(callData);
             await nuls?.waitingResult(txHash);
             onClose();
@@ -91,7 +91,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
     const handleConfirmReceipt = async () => {
         showLoading()
         await safeExecuteAsync(async () => {
-            console.log('Confirming receipt for order:', order.oid);
+            console.debug('Confirming receipt for order:', order.oid);
             const callData = {
                 from: user!.uid,
                 value: 0,
@@ -112,7 +112,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
     const handleReConfirmReceipt = async () => {
         showLoading()
         await safeExecuteAsync(async () => {
-            console.log('Confirming receipt for order:', order.oid);
+            console.debug('Confirming receipt for order:', order.oid);
             const callData = {
                 from: user!.uid,
                 value: 0,
@@ -144,11 +144,11 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
 
     const handleReturnSubmit = async (data: ReturnReason) => {
         showLoading()
-        console.log('Return request submitted:', { orderId: order.oid, ...data });
+        console.debug('Return request submitted:', { orderId: order.oid, ...data });
         setShowReturnForm(false);
 
         const cid = await addJson(ctx, data)
-        console.log('IPFS CID:', cid);
+        console.debug('IPFS CID:', cid);
 
         if (!cid) {
             showToast("error", "Image upload failed.");
@@ -166,7 +166,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                 args: [order.oid, cid],
                 multyAssetValues: []
             }
-            console.log("callData:", callData);
+            console.debug("callData:", callData);
             const txHash = await window.nabox!.contractCall(callData);
             await ctx?.nuls?.waitingResult(txHash);
         }, undefined, () => {
@@ -175,35 +175,41 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
     };
 
     const handleShipmentSubmit = async (data: { shipmentNumber: string }) => {
-        console.log('Shipment submitted:', { orderId: order.oid, ...data });
+        console.debug('Shipment submitted:', { orderId: order.oid, ...data });
         setShowShipmentForm(false);
-        if (order.status === OrderStatus.PendingShipment && user?.uid === order.seller) {//发货
-            const callData = {
-                from: user!.uid,
-                value: 0,
-                contractAddress: config.contracts.Bitsflea,
-                methodName: "shipments",
-                methodDesc: "",
-                args: [order.oid, data.shipmentNumber],
-                multyAssetValues: []
+        showLoading()
+
+        await safeExecuteAsync(async () => {
+            if (order.status === OrderStatus.PendingShipment && user?.uid === order.seller) {//发货
+                const callData = {
+                    from: user!.uid,
+                    value: 0,
+                    contractAddress: config.contracts.Bitsflea,
+                    methodName: "shipments",
+                    methodDesc: "",
+                    args: [order.oid, data.shipmentNumber],
+                    multyAssetValues: []
+                }
+                const txHash = await window.nabox!.contractCall(callData);
+                await nuls?.waitingResult(txHash);
+                onClose();
+            } else if (order.status === OrderStatus.Returning && user?.uid === order.buyer) { //退货发货
+                const callData = {
+                    from: user!.uid,
+                    value: 0,
+                    contractAddress: config.contracts.Bitsflea,
+                    methodName: "reShipments",
+                    methodDesc: "",
+                    args: [order.oid, data.shipmentNumber],
+                    multyAssetValues: []
+                }
+                const txHash = await window.nabox!.contractCall(callData);
+                await nuls?.waitingResult(txHash);
+                onClose();
             }
-            const txHash = await window.nabox!.contractCall(callData);
-            await nuls?.waitingResult(txHash);
-            onClose();
-        } else if (order.status === OrderStatus.Returning && user?.uid === order.buyer) { //退货发货
-            const callData = {
-                from: user!.uid,
-                value: 0,
-                contractAddress: config.contracts.Bitsflea,
-                methodName: "reShipments",
-                methodDesc: "",
-                args: [order.oid, data.shipmentNumber],
-                multyAssetValues: []
-            }
-            const txHash = await window.nabox!.contractCall(callData);
-            await nuls?.waitingResult(txHash);
-            onClose();
-        }
+        }, undefined, () => {
+            hideLoading()
+        })
     }
 
     const getStatusInfo = () => {
@@ -376,7 +382,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                                 )}
 
                             </div>
-                            {order.status === OrderStatus.PendingReceipt && (
+                            {order.status === OrderStatus.PendingReceipt && user?.uid === order.buyer && (
                                 <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200">
                                     <button
                                         onClick={handleReturn}
@@ -409,6 +415,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                             seller={order.seller}
                             shipmentNumber={order.shipmentNumber}
                             delayedCount={order.delayedCount}
+                            deliveryInfo={order.receiptInfo}
                         />
 
                         {/* Order Timeline */}

@@ -229,6 +229,7 @@ export interface Order {
   endTime: number | null;
   delayedCount: string;
   clearTime: number;
+  receiptInfo: string;
   product: Product;
 }
 

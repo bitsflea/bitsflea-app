@@ -21,7 +21,7 @@ export const FavoriteManagement: React.FC = ({
         await safeExecuteAsync(async () => {
           // const data = await rpc!.request("getProductsByIds", [ids]);
           const data = await bitsflea!.getProductsByIds(ids)
-          // console.log("data:", data)
+          console.debug("data:", data)
           setProducts(data)
         }, "Error getProductsByIds:")
       }

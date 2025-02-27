@@ -48,9 +48,9 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
   useEffect(() => {
     const fetchProducts = async () => {
       const params = [page, ITEMS_PER_PAGE, null, user!.uid, activeFilter == 'all' ? -1 : activeFilter]
-      // console.log("params:", params)
+      console.debug("params:", params)
       const data = await ctx.rpc!.request("getProducts", params);
-      console.log("fetchProducts data:", data);
+      console.debug("fetchProducts data:", data);
       if (data.result && data.result.length > 0) {
         setManagedProducts(data.result);
         setPage(1);
@@ -108,7 +108,7 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
 
   const handlePublish = async (data: any) => {
     showLoading();
-    console.log('Publishing product:', data);
+    console.debug('Publishing product:', data);
     const cid = await addProductInfo(ctx, {
       name: data.name,
       images: data.images,
@@ -117,9 +117,9 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
       shipping: data.shipping ?? config.default_item_details.shipping
     })
     // const cid = await addUserExtendInfo(ctx, { e: "", x: "", tg: "@necklacex", d:"Senior reviewer focused on product quality control"})
-    console.log('IPFS CID:', cid);
+    console.debug('IPFS CID:', cid);
     const pid = await ctx.bitsflea?.newProductId(user!.uid);
-    console.log("pid:", pid?.toString(10));
+    console.debug("pid:", pid?.toString(10));
     if (!pid) {
       showToast("error", "Failed to obtain product ID");
       hideLoading();
@@ -138,7 +138,7 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
         args: [pid!.toString(10), data.category, data.name, cid, false, data.isRetail, true, position, 0, parseInt(data.stock), 1, `${parseNULS(data.shippingFee, currency.decimals)},${currency.value}`, `${parseNULS(data.price, currency.decimals)},${currency.value}`],
         multyAssetValues: []
       }
-      console.log("callData:", callData);
+      console.debug("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await ctx?.nuls?.waitingResult(txHash);
     }, undefined, () => {
@@ -159,7 +159,7 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
         args: [productId],
         multyAssetValues: []
       }
-      console.log("callData:", callData);
+      console.debug("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await ctx?.nuls?.waitingResult(txHash);
 

@@ -19,10 +19,10 @@ export const FollowingManagement: React.FC = ({
       const ids = await getUserData(userDB, user!.uid, KEY_FOLLOWING)
       if (ids.length > 0) {
         await safeExecuteAsync(async () => {
-          // console.log("ids:", ids)
+          console.debug("ids:", ids)
           // const data = await rpc!.request("getUsersByIds", [ids]);
           const data = await bitsflea!.getUsersByIds(ids)
-          // console.log("data:", data)
+          console.debug("data:", data)
           const _shops = data.map((v: UserInfo) => {
             return {
               id: v.uid,
@@ -45,7 +45,7 @@ export const FollowingManagement: React.FC = ({
   }, [user])
 
   const onViewShop = async (shopId: string) => {
-    console.log("shopId:", shopId)
+    console.debug("shopId:", shopId)
   }
 
   const onUnfollow = async (shopId: string) => {

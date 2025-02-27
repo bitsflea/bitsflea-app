@@ -22,7 +22,7 @@ export const defaultProductInfo: ProductInfo = {
  * @returns 
  */
 export async function getProductInfo(ctx: HeliaContextType | null, product: Product, timeout?: number): Promise<ProductInfo> {
-    // console.log("product:", product);
+    // console.debug("product:", product);
     const price = getAsset(product.price);
     if (!ctx || !ctx.helia) {
         return Object.assign(defaultProductInfo, { id: product.pid, price: price });
@@ -296,4 +296,13 @@ export async function getJson<T>(ctx: HeliaContextType | null, cid: string, time
         console.error('Failed to fetch json:', err);
     }
     return defaultInfo;
+}
+
+export function isCid(str: string) {
+    try {
+        CID.parse(str)
+    } catch {
+        return false
+    }
+    return true
 }

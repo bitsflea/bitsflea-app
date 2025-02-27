@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, MapPin, Settings, Star, Trash2 } from 'lucide-react';
+import { Plus, MapPin } from 'lucide-react';
 import { Address } from '../types';
 import { AddressEditor } from './AddressEditor';
 import { useHelia } from '../context/HeliaContext';
 import { getAddresses, setAddresses } from '../utils/db';
 import { useAuth } from '../context/AuthContext';
 import { safeExecuteAsync } from '../data/error';
+import { AddressCard } from './AddressCard';
 
 interface AddressManagementProps {
   onAddAddress: (address: Address) => void;
@@ -31,7 +32,7 @@ export const AddressManagement: React.FC<AddressManagementProps> = ({
     const loadAddress = async () => {
       await safeExecuteAsync(async () => {
         let data = await getAddresses(userDB, user!.uid)
-        // console.log("data:", data)
+        console.debug("data:", data)
         if (data) {
           setAddress(data)
         }
@@ -95,58 +96,7 @@ export const AddressManagement: React.FC<AddressManagementProps> = ({
       <div className="grid gap-3 sm:gap-4">
         {addresses.length > 0 ? (
           addresses.map((address) => (
-            <div
-              key={address.id}
-              className="bg-white p-3 sm:p-6 rounded-xl shadow-sm border border-gray-100 relative"
-            >
-              <div className="flex justify-between items-start gap-3">
-                <div className="flex gap-2 sm:gap-3">
-                  <div className="mt-1">
-                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 sm:gap-3 mb-1 flex-wrap">
-                      <h3 className="text-sm sm:text-base font-semibold text-gray-900">{address.name}</h3>
-                      <span className="text-xs sm:text-sm text-gray-500">{address.phone}</span>
-                      {address.isDefault && (
-                        <span className="bg-primary-50 text-primary-600 text-xs px-2 py-0.5 rounded-full">
-                          Default
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-0.5">
-                      {address.location.country} {address.location.region} {address.location.district}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">{address.address}</p>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-1 sm:gap-2">
-                  {!address.isDefault && (
-                    <button
-                      onClick={() => onSetDefault(address.id)}
-                      className="text-gray-400 hover:text-yellow-500 transition-colors p-1.5 sm:p-2 hover:bg-gray-50 rounded-full"
-                      title="Set as Default"
-                    >
-                      <Star className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleEdit(address)}
-                    className="text-gray-400 hover:text-primary-600 transition-colors p-1.5 sm:p-2 hover:bg-gray-50 rounded-full"
-                  >
-                    <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </button>
-                  <button
-                    onClick={() => onDeleteAddress(address.id)}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-1.5 sm:p-2 hover:bg-gray-50 rounded-full"
-                  >
-                    <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
+            <AddressCard key={address.id} address={address} onSetDefault={onSetDefault} onDeleteAddress={onDeleteAddress} handleEdit={handleEdit} />
           ))
         ) : (
           <div className="text-center py-12 bg-white rounded-lg border border-gray-100">

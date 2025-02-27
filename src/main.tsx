@@ -10,7 +10,7 @@ import { ToastProvider } from './context/ToastContext';
 import VConsole from 'vconsole';
 
 const vConsole = new VConsole();
-console.log('vConsole initialized!');
+console.debug('vConsole initialized!');
 
 createRoot(document.getElementById('root')!).render(
   // <StrictMode>

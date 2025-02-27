@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Upload, Plus, Trash2 } from 'lucide-react';
+import { X, Upload, Trash2 } from 'lucide-react';
 import { categories } from '../data/categories';
 import { LocationValue, ProductStatus } from '../types';
 import { GoogleMapsLocationSelector } from './GoogleMapsLocationSelector';
@@ -42,7 +42,7 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    // addImages(ctx, files).then(images => {console.log(images)});
+    // addImages(ctx, files).then(images => {console.debug(images)});
     const remainingSlots = 5 - formData.images.length;
     const filesToProcess = files.slice(0, remainingSlots);
 

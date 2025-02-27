@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserInfo } from '../types';
+import EventEmitter from 'events';
 
 interface AuthContextType {
   user: UserInfo | null;
   login: (user: UserInfo) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  loginEmitter: EventEmitter;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -43,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, loginEmitter: new EventEmitter() }}>
       {children}
     </AuthContext.Provider>
   );

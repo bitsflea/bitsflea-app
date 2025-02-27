@@ -2,22 +2,32 @@ import React from 'react';
 import { useToast } from '../context/ToastContext';
 import { Check, Copy } from 'lucide-react';
 import { showOrderId } from '../utils/nuls';
+import { getJson, isCid } from '../utils/ipfs';
+import { Address } from '../types';
+import { useHelia } from '../context/HeliaContext';
+import { AddressCard } from './AddressCard';
+import { useAuth } from '../context/AuthContext';
 
 interface OrderAdditionalInfoProps {
   orderId: string;
   seller: string;
   shipmentNumber?: string;
   delayedCount: string;
+  deliveryInfo?: string | null;
 }
 
 export const OrderAdditionalInfo: React.FC<OrderAdditionalInfoProps> = ({
   orderId,
   seller,
   shipmentNumber,
-  delayedCount
+  delayedCount,
+  deliveryInfo
 }) => {
-  const { showToast } = useToast();
-  const [copying, setCopying] = React.useState(false);
+  const { showToast } = useToast()
+  const ctx = useHelia()
+  const { user } = useAuth()
+  const [copying, setCopying] = React.useState(false)
+  const [delivery, setDelivery] = React.useState<Address | null>(null)
 
   const handleCopy = async () => {
     try {
@@ -33,6 +43,23 @@ export const OrderAdditionalInfo: React.FC<OrderAdditionalInfoProps> = ({
       showToast('error', 'Failed to copy Order ID');
     }
   };
+
+  const onViewDelivery = async () => {
+    try {
+      let obj = await getJson<{ seller: string, enMsg: string }>(ctx, deliveryInfo!)
+      if (JSON.stringify(obj) !== "{}") {
+        let msg = await window.nabox?.decryptData([obj.enMsg, user?.uid])
+        if (msg) {
+          try {
+            const addr = JSON.parse(msg)
+            setDelivery(addr as Address)
+          } catch { }
+        }
+      }
+    } catch (err) {
+      showToast('error', 'Failed to load delivery info');
+    }
+  }
 
   return (
     <div className="mb-6">
@@ -69,6 +96,19 @@ export const OrderAdditionalInfo: React.FC<OrderAdditionalInfoProps> = ({
           <div className="flex justify-between py-2 border-b border-gray-100">
             <span className="text-gray-500">Delayed Count</span>
             <span className="text-orange-600">{delayedCount}</span>
+          </div>
+        )}
+
+        {!!delivery && (
+          <AddressCard address={delivery} />
+        )}
+
+        {!!deliveryInfo && isCid(deliveryInfo) && !delivery && user?.uid === seller && (
+          <div className="flex justify-between py-2 border-b border-gray-100">
+            <span className="text-gray-500">Delivery Info</span>
+            <span className="text-orange-600">
+              <button onClick={onViewDelivery}>View</button>
+            </span>
           </div>
         )}
       </div>
