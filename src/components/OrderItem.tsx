@@ -123,11 +123,19 @@ export const OrderItem: React.FC<OrderItemProps> = ({ order, onClick }) => {
 
         {/* Product Info */}
         <div className="flex gap-4">
-          <img
-            src={productInfo?.images[0]}
-            alt={productInfo?.name}
-            className="w-20 h-20 object-cover rounded-lg"
-          />
+          {productInfo == null ? (
+            <img
+              src="/loading.gif"
+              className="w-20 h-20 object-cover rounded-lg"
+            />
+          ) : (
+            <img
+              src={productInfo.images[0]}
+              alt={productInfo.name}
+              className="w-20 h-20 object-cover rounded-lg"
+            />
+          )}
+
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-medium text-gray-900 mb-1 line-clamp-2">
               {productInfo?.name}
