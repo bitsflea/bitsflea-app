@@ -91,11 +91,11 @@ export const OrderItem: React.FC<OrderItemProps> = ({ order, onClick }) => {
   useEffect(() => {
     const loadProduct = async () => {
       const data = await bitsflea!.getProduct(order.pid);
-      console.log("data:", data);
+      console.debug("data:", data);
       if (data) {
         order.product = data;
         const info = await getProductInfo(ctx, data, 5000);
-        console.log("info:", info);
+        console.debug("info:", info);
         if (info) {
           order.product.info = info;
           setProductInfo(info);

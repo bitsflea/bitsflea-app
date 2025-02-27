@@ -50,7 +50,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     const loadProductInfo = async () => {
       await safeExecuteAsync(async () => {
         const info = await getProductInfo(ctx, product, 5000);
-        // console.log("info:", info);
+        console.debug("info:", info);
         productInfo = info;
       })
     }
@@ -62,9 +62,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   useEffect(() => {
     const fetchUserExtendInfo = async () => {
       const result = await ctx.rpc?.request("getUsers", [1, 1, product.uid, null, null])
-      // console.log("result:", result)
+      console.debug("result:", result)
       const info = await getUserExtendInfo(ctx, result.result[0].extendInfo);
-      console.log("info:", info)
+      console.debug("info:", info)
       setUserExtendInfo(info);
     };
     fetchUserExtendInfo();
@@ -93,7 +93,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
 
   const handleBuy = async () => {
     try {
-      console.log('Buying product:', product);
+      console.debug('Buying product:', product);
       if (product.isRetail && product.stockCount > 1) {
         setShowQuantity(true);
       } else {
@@ -106,10 +106,10 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
 
   const onConfirm = async (quantity: number) => {
     setShowQuantity(false);
-    console.log("quantity:", quantity)
+    console.debug("quantity:", quantity)
     showLoading()
     const orderId = await ctx.bitsflea!.newOrderId(user!.uid, product.pid);
-    console.log("orderId:", orderId);
+    console.debug("orderId:", orderId);
     if (!orderId) {
       showToast("error", "Failed to obtain order ID");
       hideLoading();
@@ -125,7 +125,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
         args: [orderId.toString(10), quantity],
         multyAssetValues: []
       }
-      console.log("callData:", callData);
+      console.debug("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await ctx?.nuls?.waitingResult(txHash);
       onClose();

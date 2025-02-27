@@ -35,13 +35,13 @@ export const UserCenter: React.FC = () => {
   const ctx = useHelia();
   const { showLoading, hideLoading } = useLoading();
 
-  // console.log("user:", user)
+  // console.debug("user:", user)
 
   useEffect(() => {
     const fetchUserExtendInfo = async () => {
       if (!user || !user.extendInfo) return;
       const info = await getUserExtendInfo(ctx, user.extendInfo);
-      // console.log("info:", info)
+      // console.debug("info:", info)
       setUserExtendInfo(info);
     };
     fetchUserExtendInfo();
@@ -49,10 +49,10 @@ export const UserCenter: React.FC = () => {
 
   const handleProfileSave = async (data: { avatar: string; nickname: string; description: string, tg: string }) => {
     showLoading()
-    console.log('Profile updated:', data);
+    console.debug('Profile updated:', data);
     await safeExecuteAsync(async () => {
       let eInfo: any = await getUserExtendInfo(ctx, user!.extendInfo, 5000);
-      console.log("eInfo:", eInfo);
+      console.debug("eInfo:", eInfo);
       eInfo.d = data.description;
       eInfo.tg = data.tg;
 
@@ -65,11 +65,11 @@ export const UserCenter: React.FC = () => {
       if (data.avatar != user!.head) {
         let cids = await addImages(ctx, [data.avatar]);
         head = cids[0];
-        console.log("head:", head);
+        console.debug("head:", head);
       }
 
       eInfo = await addUserExtendInfo(ctx, eInfo);
-      // console.log("eInfo:", eInfo, user!.extendInfo);
+      console.debug("eInfo:", eInfo, user!.extendInfo);
       if (eInfo === user!.extendInfo) {
         eInfo = null;
       }
@@ -122,8 +122,8 @@ export const UserCenter: React.FC = () => {
       case 'addresses':
         return (
           <AddressManagement
-            onAddAddress={(address) => console.log('Add address:', address)}
-            onEditAddress={(address) => console.log('Edit address:', address)}
+            onAddAddress={(address) => console.debug('Add address:', address)}
+            onEditAddress={(address) => console.debug('Edit address:', address)}
           />
         );
 

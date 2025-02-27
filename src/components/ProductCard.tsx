@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Product, ProductInfo, ProductStatus } from '../types';
+import { Address, Product, ProductInfo, ProductStatus } from '../types';
 import { ProductDetail } from './ProductDetail';
 import { ImageCarousel } from './ImageCarousel';
 import { AlertCircle, CheckCircle2, Clock, Lock, XCircle } from 'lucide-react';
-import { defaultProductInfo, getProductInfo } from '../utils/ipfs';
+import { addJson, defaultProductInfo, getProductInfo } from '../utils/ipfs';
 import { useHelia } from '../context/HeliaContext';
 import { useToast } from '../context/ToastContext';
 import { QuantityDialog } from './QuantityDialog';
@@ -11,6 +11,8 @@ import { useLoading } from '../context/LoadingContext';
 import { useAuth } from '../context/AuthContext';
 import config from '../data/config';
 import { safeExecuteAsync } from '../data/error';
+import { AddressDialog } from './AddressDialog';
+import { encryptMsg } from 'nuls-api-v2';
 
 interface ProductCardProps {
   product: Product;
@@ -89,6 +91,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const ctx = useHelia();
   const { showToast } = useToast();
   const [showQuantity, setShowQuantity] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [showAddress, setShowAddress] = useState(false);
   const { showLoading, hideLoading } = useLoading();
   const { user, isAuthenticated, loginEmitter } = useAuth();
 
@@ -96,7 +100,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     const loadProductInfo = async () => {
       await safeExecuteAsync(async () => {
         const info = await getProductInfo(ctx, product, 5000);
-        // console.log("info:", info);
+        console.debug("info:", info);
         setProductInfo(info);
       })
     }
@@ -106,7 +110,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   }, [ctx?.fs, product.description])
 
   const handleClick = () => {
-    console.log("productInfo:", productInfo)
+    console.debug("productInfo:", productInfo)
     if (onClick) {
       onClick();
     } else {
@@ -121,27 +125,56 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       return
     }
     try {
-      console.log('Buying product:', product);
+      console.debug('Buying product:', product);
       if (product.isRetail && product.stockCount > 1) {
         setShowQuantity(true);
       } else {
-        await onConfirm(product.stockCount);
+        onQuantityConfirm(product.stockCount);
       }
     } catch (error) {
       console.error('Error processing purchase:', error);
     }
   };
 
-  const onConfirm = async (quantity: number) => {
-    setShowQuantity(false);
-    console.log("quantity:", quantity)
+  const onQuantityConfirm = (quantity: number) => {
+    setShowQuantity(false)
+    setShowAddress(true)
+    setQuantity(quantity)
+  }
+
+  const onAddressClose = () => {
+    setShowAddress(false);
+  }
+
+  const onConfirm = async (quantity: number, address?: Address) => {
+    setShowAddress(false);
+    console.debug("quantity:", quantity, address)
+
     showLoading()
-    const orderId = await ctx.bitsflea!.newOrderId(user!.uid, product.pid);
-    console.log("orderId:", orderId);
+    const [orderId, seller] = await Promise.all([
+      ctx.bitsflea!.newOrderId(user!.uid, product.pid),
+      ctx.bitsflea!.getUser(product.uid)
+    ])
+    if (!seller) {
+      showToast("error", "Failed to obtain seller info");
+      hideLoading();
+      return;
+    }
+
+    console.debug("orderId:", orderId);
     if (!orderId) {
       showToast("error", "Failed to obtain order ID");
       hideLoading();
       return;
+    }
+    // 加密收货信息
+    let cid = null
+    if (address) {
+      const msg = JSON.stringify(address)
+      const enMsg = await encryptMsg(msg, seller.encryptKey)
+      console.debug("enMsg:", enMsg)
+      cid = await addJson(ctx, { seller: product.uid, enMsg })
+      console.debug("cid:", cid)
     }
     await safeExecuteAsync(async () => {
       const callData = {
@@ -150,10 +183,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         contractAddress: config.contracts.Bitsflea,
         methodName: "placeOrder",
         methodDesc: "",
-        args: [orderId.toString(10), quantity],
+        args: [orderId.toString(10), quantity, cid],
         multyAssetValues: []
       }
-      console.log("callData:", callData);
+      console.debug("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await ctx?.nuls?.waitingResult(txHash);
     }, undefined, () => {
@@ -240,9 +273,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* QuantityDialog */}
       {showQuantity &&
         (
-          <QuantityDialog price={product.price} maxValue={product.stockCount} onConfirm={onConfirm} onClose={onQuantityClose} />
+          <QuantityDialog price={product.price} maxValue={product.stockCount} onConfirm={onQuantityConfirm} onClose={onQuantityClose} />
         )
       }
+
+      {/* AddressDialog */}
+      {showAddress && (
+        <AddressDialog quantity={quantity} onConfirm={onConfirm} onClose={onAddressClose} />
+      )}
     </>
   );
 };

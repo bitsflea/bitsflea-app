@@ -30,9 +30,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
 
   // Get user info from localStorage
   const mockFetchUserInfo = async (address: string): Promise<UserInfo | null | undefined> => {
-    // console.log("ctx:", ctx);
     const userInfo = await ctx!.bitsflea!.getUser(address);
-    console.log("userInfo:", userInfo);
+    console.debug("userInfo:", userInfo);
 
     // Save to localStorage
     localStorage.setItem('userInfo', JSON.stringify(userInfo));
@@ -43,12 +42,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
     if (walletType === 'nabox') {
       if ('nabox' in window) {
         const naboxInfo = await window.nabox!.createSession();
-        console.log("naboxInfo:", naboxInfo)
+        console.debug("naboxInfo:", naboxInfo)
         if (naboxInfo && naboxInfo.length > 0) {
           setConnectedAddress(naboxInfo[0]);
           await safeExecuteAsync(async () => {
             const userInfo = await mockFetchUserInfo(naboxInfo[0]);
-            console.log("userInfo:", userInfo)
+            console.debug("userInfo:", userInfo)
 
             if (userInfo) {
               // User exists, proceed with login
@@ -69,7 +68,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
   };
 
   const handleRegister = async (info: any) => {
-    console.log("info:", info)
+    console.debug("info:", info)
     //Create new user
     const phoneHash = getHash(info.phone);
     const phoneEncrypt = "";  //TODO: Encrypt phone number
@@ -90,7 +89,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
     await ctx?.nuls?.waitingResult(txHash);
 
     const newUser = await ctx?.bitsflea?.getUser(connectedAddress);
-    // console.log("newUser:", newUser);
+    console.debug("newUser:", newUser);
     if (newUser) {
       // Login
       login(newUser!);

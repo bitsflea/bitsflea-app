@@ -26,7 +26,7 @@ export const ProductReview: React.FC = () => {
     const getProducts = async () => {
       await safeExecuteAsync(async () => {
         const data = await rpc!.request("getProducts", [page, ITEMS_PER_PAGE, null, null, 0]);
-        console.log("get review products:", data);
+        console.debug("get review products:", data);
         setProducts(data.result);
         setPage(1);
         setHasMore(data.result.length > ITEMS_PER_PAGE);
@@ -82,7 +82,7 @@ export const ProductReview: React.FC = () => {
   };
 
   const handleReview = async (productId: string, approved: boolean, reason: string) => {
-    console.log(productId, approved, reason)
+    console.debug(productId, approved, reason)
     showLoading()
     await safeExecuteAsync(async () => {
       const callData = {
@@ -94,7 +94,7 @@ export const ProductReview: React.FC = () => {
         args: [productId, !approved, reason],
         multyAssetValues: []
       }
-      console.log("callData:", callData);
+      console.debug("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await nuls?.waitingResult(txHash);
     }, undefined, () => {

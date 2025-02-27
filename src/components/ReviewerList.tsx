@@ -7,7 +7,6 @@ import { useAuth } from '../context/AuthContext';
 import { ExtendInfo } from './ExtendInfo';
 import { useLoading } from '../context/LoadingContext';
 import config from '../data/config';
-import { useToast } from '../context/ToastContext';
 import { safeExecuteAsync } from '../data/error';
 
 const ITEMS_PER_PAGE = 8;
@@ -25,14 +24,13 @@ export const ReviewerList: React.FC = () => {
   const loaderRef = useRef<HTMLDivElement>(null);
 
   const { showLoading, hideLoading } = useLoading();
-  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchReviewer = async () => {
       const name = searchType === 'nickname' ? searchQuery : null
       const address = searchType === 'address' ? searchQuery : null
       const data = await rpc!.request("getReviewer", [name, address, page, ITEMS_PER_PAGE])
-      console.log("data:", data)
+      console.debug("data:", data)
       setReviewers(data.result)
     }
     if (rpc) {
@@ -83,7 +81,7 @@ export const ReviewerList: React.FC = () => {
   };
 
   const hasVoted = (voted: string) => {
-    console.log("voted:", voted)
+    console.debug("voted:", voted)
     const obj = JSON.parse(voted)
     if (user && obj) {
       return Object.keys(obj).includes(user.uid)
@@ -92,7 +90,7 @@ export const ReviewerList: React.FC = () => {
   }
 
   const handleVote = async (reviewerId: string, voteType: 'up' | 'down') => {
-    console.log(reviewerId, voteType)
+    console.debug(reviewerId, voteType)
     showLoading();
     await safeExecuteAsync(async () => {
       const callData = {
@@ -104,7 +102,7 @@ export const ReviewerList: React.FC = () => {
         args: [reviewerId, voteType === 'up'],
         multyAssetValues: []
       }
-      console.log("callData:", callData);
+      console.debug("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await nuls?.waitingResult(txHash);
     })
@@ -136,7 +134,7 @@ export const ReviewerList: React.FC = () => {
         args: [],
         multyAssetValues: []
       }
-      console.log("callData:", callData);
+      console.debug("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await nuls!.waitingResult(txHash);
     })

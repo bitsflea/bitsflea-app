@@ -16,7 +16,7 @@ export const ExtendInfo: React.FC<ExtendInfoProps> = ({ extendInfo, className })
         const fetchUserExtendInfo = async () => {
             if (!extendInfo) return;
             const info = await getUserExtendInfo(ctx, extendInfo);
-            // console.log("info:", info)
+            console.debug("info:", info)
             setUserExtendInfo(info);
         };
         fetchUserExtendInfo();

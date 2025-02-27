@@ -116,7 +116,7 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [json, setJson] = useState<HJSON | null>(null)
 
     const onPin = (evt: any) => {
-        console.log("onPin:", evt)
+        console.debug("onPin:", evt)
     }
 
     useEffect(() => {
@@ -131,10 +131,10 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 const option = createOption(pri)
                 const libp2p = await createLibp2p(option);
 
-                console.log("PeerId:", libp2p.peerId.toString());
+                console.debug("PeerId:", libp2p.peerId.toString());
 
                 libp2p.services.pubsub.addEventListener('message', async (evt) => {
-                    console.log("evt:", evt.detail.topic);
+                    console.debug("evt:", evt.detail.topic);
                     if (evt.detail.topic === config.topic_file) {
                         try {
                             const cid = CID.parse(uint8ArrayToString(evt.detail.data));
@@ -154,7 +154,7 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
                 libp2p.addEventListener('peer:discovery', async (evt) => {
                     const peerId = evt.detail.id.toString();
-                    // console.log(`Discovered peer: ${peerId}`);
+                    // console.debug(`Discovered peer: ${peerId}`);
                     const peerIds = libp2p.getPeers().map(p => p.toString())
                     if (peerIds.includes(evt.detail.id.toString()) === false) {
                         console.debug(`connect to ${peerId}`)
@@ -165,13 +165,13 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 });
 
                 libp2p.addEventListener('peer:connect', (evt) => {
-                    console.log(`Connected to peer: `, evt.detail.toString())
+                    console.debug(`Connected to peer: `, evt.detail.toString())
                 })
 
                 libp2p.addEventListener('peer:disconnect', async (evt) => {
-                    console.log(`Peer disconnect: `, evt.detail.toString())
+                    console.debug(`Peer disconnect: `, evt.detail.toString())
                     // if (evt.detail.toString() === SERVER_ID) {
-                    //     console.log("重连...")
+                    //     console.debug("重连...")
                     //     await libp2p.dial(evt.detail).catch(console.debug)
                     // }
                 })
@@ -194,7 +194,7 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
                 // 初始化 Bitsflea 合约
                 const bitsfleaInstance = await nulsInstance.contract(config.contracts.Bitsflea)
-                // console.log("bitsfleaInstance:", bitsfleaInstance);
+                // console.debug("bitsfleaInstance:", bitsfleaInstance);
 
                 setUserDB(userDB)
                 setHelia(heliaInstance)

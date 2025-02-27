@@ -41,7 +41,7 @@ export const SalesManagement: React.FC = ({ }) => {
       const data = await safeExecuteAsync(async () => {
         return rpc!.request("getOrders", params)
       })
-      console.log("fetchOrders data:", data);
+      console.debug("fetchOrders data:", data);
       if (data == null) {
         return;
       }
