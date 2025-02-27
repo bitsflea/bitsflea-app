@@ -376,7 +376,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                                 )}
 
                             </div>
-                            {order.status === OrderStatus.PendingReceipt && (
+                            {order.status === OrderStatus.PendingReceipt && user?.uid === order.buyer && (
                                 <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200">
                                     <button
                                         onClick={handleReturn}
