@@ -177,33 +177,39 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
     const handleShipmentSubmit = async (data: { shipmentNumber: string }) => {
         console.debug('Shipment submitted:', { orderId: order.oid, ...data });
         setShowShipmentForm(false);
-        if (order.status === OrderStatus.PendingShipment && user?.uid === order.seller) {//发货
-            const callData = {
-                from: user!.uid,
-                value: 0,
-                contractAddress: config.contracts.Bitsflea,
-                methodName: "shipments",
-                methodDesc: "",
-                args: [order.oid, data.shipmentNumber],
-                multyAssetValues: []
+        showLoading()
+
+        await safeExecuteAsync(async () => {
+            if (order.status === OrderStatus.PendingShipment && user?.uid === order.seller) {//发货
+                const callData = {
+                    from: user!.uid,
+                    value: 0,
+                    contractAddress: config.contracts.Bitsflea,
+                    methodName: "shipments",
+                    methodDesc: "",
+                    args: [order.oid, data.shipmentNumber],
+                    multyAssetValues: []
+                }
+                const txHash = await window.nabox!.contractCall(callData);
+                await nuls?.waitingResult(txHash);
+                onClose();
+            } else if (order.status === OrderStatus.Returning && user?.uid === order.buyer) { //退货发货
+                const callData = {
+                    from: user!.uid,
+                    value: 0,
+                    contractAddress: config.contracts.Bitsflea,
+                    methodName: "reShipments",
+                    methodDesc: "",
+                    args: [order.oid, data.shipmentNumber],
+                    multyAssetValues: []
+                }
+                const txHash = await window.nabox!.contractCall(callData);
+                await nuls?.waitingResult(txHash);
+                onClose();
             }
-            const txHash = await window.nabox!.contractCall(callData);
-            await nuls?.waitingResult(txHash);
-            onClose();
-        } else if (order.status === OrderStatus.Returning && user?.uid === order.buyer) { //退货发货
-            const callData = {
-                from: user!.uid,
-                value: 0,
-                contractAddress: config.contracts.Bitsflea,
-                methodName: "reShipments",
-                methodDesc: "",
-                args: [order.oid, data.shipmentNumber],
-                multyAssetValues: []
-            }
-            const txHash = await window.nabox!.contractCall(callData);
-            await nuls?.waitingResult(txHash);
-            onClose();
-        }
+        }, undefined, () => {
+            hideLoading()
+        })
     }
 
     const getStatusInfo = () => {

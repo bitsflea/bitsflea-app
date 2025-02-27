@@ -103,7 +103,7 @@ export const OrderAdditionalInfo: React.FC<OrderAdditionalInfoProps> = ({
           <AddressCard address={delivery} />
         )}
 
-        {!!deliveryInfo && isCid(deliveryInfo) && !delivery && (
+        {!!deliveryInfo && isCid(deliveryInfo) && !delivery && user?.uid === seller && (
           <div className="flex justify-between py-2 border-b border-gray-100">
             <span className="text-gray-500">Delivery Info</span>
             <span className="text-orange-600">
