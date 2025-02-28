@@ -12,7 +12,7 @@ export const Footer: React.FC = () => {
           {/* Social Links */}
           <div className="flex items-center gap-6">
             <a
-              href="https://x.com/bitsflea95835"
+              href="https://x.com/BitsFleaX"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-500 hover:text-primary-600 transition-colors"
@@ -20,7 +20,7 @@ export const Footer: React.FC = () => {
               <FaXTwitter className="h-5 w-5" />
             </a>
             <a
-              href="https://t.me/+N9nHUnJ7hrQ0YzU1"
+              href="https://t.me/bitsflea"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-500 hover:text-primary-600 transition-colors"
