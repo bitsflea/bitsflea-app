@@ -87,11 +87,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
     //Create new user
     const phoneHash = getHash(info.phone);
     const phoneEncrypt = await encryptMsg(info.phone, globalParams!.encryptKey);
-    console.debug("phoneEncrypt:",phoneEncrypt)
+    console.debug("phoneEncrypt:", phoneEncrypt)
 
-    const referrer = localStorage.getItem(config.KEY_REF);
+    let referrer = localStorage.getItem(config.KEY_REF);
     const avatar = info.avatar.startsWith("http") ? info.avatar : (await addImages(ctx, [info.avatar]))[0];
     const extendInfo = await addUserExtendInfo(ctx, { x: "", tg: info.tg, e: "", d: info.description });
+
+    if (referrer != null && connectedAddress === referrer) {
+      referrer = null
+    }
 
     await safeExecuteAsync(async () => {
       const data = {

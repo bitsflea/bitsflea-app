@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Package, MapPin, Heart, Store, Shield, Star, Pencil, ShoppingBag, Truck } from 'lucide-react';
+import { Package, MapPin, Heart, Store, Shield, Star, Pencil, ShoppingBag, Truck, Aperture } from 'lucide-react';
 import { ProductManagement } from './ProductManagement';
 import { PurchaseManagement } from './PurchaseManagement';
 import { AddressManagement } from './AddressManagement';
@@ -16,6 +16,7 @@ import config from '../data/config';
 import { formatDate } from '../utils/date';
 import { useLoading } from '../context/LoadingContext';
 import { safeExecuteAsync } from '../data/error';
+import { useToast } from '../context/ToastContext';
 
 
 const tabs = [
@@ -34,6 +35,7 @@ export const UserCenter: React.FC = () => {
   const { user, login } = useAuth();
   const ctx = useHelia();
   const { showLoading, hideLoading } = useLoading();
+  const { showToast } = useToast()
 
   // console.debug("user:", user)
 
@@ -92,6 +94,12 @@ export const UserCenter: React.FC = () => {
       hideLoading()
     })
   };
+
+  const handleCopyReferral = async () => {
+    const url = `${window.location.href}ref=${user?.uid}`
+    await navigator.clipboard.writeText(url);
+    showToast('success', 'Referral Link copied to clipboard');
+  }
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -190,6 +198,12 @@ export const UserCenter: React.FC = () => {
               {userExtendInfo.d && (
                 <p className="text-gray-600 mt-2">{userExtendInfo.d}</p>
               )}
+              <button onClick={handleCopyReferral} className="text-primary-600 hover:text-primary-700 font-medium flex items-center">
+                <Aperture className="h-4 w-4 mr-2" />
+                <span>
+                  Referral Link
+                </span>
+              </button>
             </div>
           </div>
         </div>
