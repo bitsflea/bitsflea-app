@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useToast } from '../context/ToastContext';
 import { Check, Copy } from 'lucide-react';
 import { showOrderId } from '../utils/nuls';
@@ -7,10 +7,12 @@ import { Address } from '../types';
 import { useHelia } from '../context/HeliaContext';
 import { AddressCard } from './AddressCard';
 import { useAuth } from '../context/AuthContext';
+import { getAddresses } from '../utils/db';
 
 interface OrderAdditionalInfoProps {
   orderId: string;
   seller: string;
+  buyer: string;
   shipmentNumber?: string;
   delayedCount: string;
   deliveryInfo?: string | null;
@@ -19,6 +21,7 @@ interface OrderAdditionalInfoProps {
 export const OrderAdditionalInfo: React.FC<OrderAdditionalInfoProps> = ({
   orderId,
   seller,
+  buyer,
   shipmentNumber,
   delayedCount,
   deliveryInfo
@@ -28,6 +31,23 @@ export const OrderAdditionalInfo: React.FC<OrderAdditionalInfoProps> = ({
   const { user } = useAuth()
   const [copying, setCopying] = React.useState(false)
   const [delivery, setDelivery] = React.useState<Address | null>(null)
+
+  useEffect(() => {
+    const loadDelivery = async () => {
+      if (buyer === user!.uid) {
+        let obj = await getJson<{ id: number, seller: string, enMsg: string }>(ctx, deliveryInfo!)
+        if (JSON.stringify(obj) !== "{}") {
+          const addresses = await getAddresses(ctx.userDB, user!.uid)
+          const addr = addresses.find((v) => v.id == obj.id)
+          if (addr) {
+            addr.isDefault = false
+            setDelivery(addr)
+          }
+        }
+      }
+    }
+    loadDelivery()
+  }, [])
 
   const handleCopy = async () => {
     try {
@@ -52,6 +72,7 @@ export const OrderAdditionalInfo: React.FC<OrderAdditionalInfoProps> = ({
         if (msg) {
           try {
             const addr = JSON.parse(msg)
+            addr.isDefault = false
             setDelivery(addr as Address)
           } catch { }
         }
@@ -82,10 +103,18 @@ export const OrderAdditionalInfo: React.FC<OrderAdditionalInfoProps> = ({
             </button>
           </div>
         </div>
-        <div className="flex justify-between py-2 border-b border-gray-100 w-full">
-          <span className="text-gray-500">Seller</span>
-          <span className="text-gray-900 truncate ml-1">{seller}</span>
-        </div>
+        {user!.uid === seller ? (
+          <div className="flex justify-between py-2 border-b border-gray-100 w-full">
+            <span className="text-gray-500">Buyer</span>
+            <span className="text-gray-900 truncate ml-1">{buyer}</span>
+          </div>
+        ) : (
+          <div className="flex justify-between py-2 border-b border-gray-100 w-full">
+            <span className="text-gray-500">Seller</span>
+            <span className="text-gray-900 truncate ml-1">{seller}</span>
+          </div>
+        )}
+
         {shipmentNumber && (
           <div className="flex justify-between py-2 border-b border-gray-100">
             <span className="text-gray-500">Tracking Number</span>
