@@ -61,7 +61,7 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-2">
           {/* Avatar Upload */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative group">
