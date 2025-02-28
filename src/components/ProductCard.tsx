@@ -21,7 +21,7 @@ interface ProductCardProps {
   onDelist?: (productId: string) => void;
   onClick?: () => void;
   onReview?: (productId: string, approved: boolean, reason: string) => void;
-  onBuy?: (product: Product, quantity: number) => void
+  onBuy?: (product: Product, quantity: number, address?: Address) => void
 }
 
 const StatusBadge: React.FC<{ status: ProductStatus }> = ({ status }) => {
@@ -118,42 +118,50 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  const handleBuy = async (e: React.MouseEvent) => {
+  const handleBuy = (e: React.MouseEvent) => {
     e.stopPropagation();
+    beginBuy(product)
+  };
+
+  const beginBuy = (productInfo: Product) => {
     if (!isAuthenticated) {
       loginEmitter.emit("showLogin")
       return
     }
     try {
-      console.debug('Buying product:', product);
-      if (product.isRetail && product.stockCount > 1) {
+      console.debug('Buying product:', productInfo);
+      if (productInfo.isRetail && productInfo.stockCount > 1) {
         setShowQuantity(true);
       } else {
-        onQuantityConfirm(product.stockCount);
+        onQuantityConfirm(productInfo.stockCount);
       }
     } catch (error) {
       console.error('Error processing purchase:', error);
     }
-  };
+  }
 
   const onQuantityConfirm = (quantity: number) => {
     setShowQuantity(false)
-    setShowAddress(true)
     setQuantity(quantity)
+    setShowAddress(true)
   }
 
   const onAddressClose = () => {
     setShowAddress(false);
   }
 
-  const onConfirm = async (quantity: number, address?: Address) => {
+  const onConfirm = (quantity: number, address?: Address) => {
+    doBuy(product, quantity, address)
+  }
+
+  const doBuy = async (productInfo: Product, quantity: number, address?: Address) => {
     setShowAddress(false);
     console.debug("quantity:", quantity, address)
 
     showLoading()
     const [orderId, seller] = await Promise.all([
-      ctx.bitsflea!.newOrderId(user!.uid, product.pid),
-      ctx.bitsflea!.getUser(product.uid)
+      ctx.bitsflea!.newOrderId(user!.uid, productInfo.pid),
+      ctx.bitsflea!.getUser(productInfo.uid)
     ])
     if (!seller) {
       showToast("error", "Failed to obtain seller info");
@@ -161,7 +169,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       return;
     }
 
-    console.debug("orderId:", orderId);
+    console.debug("orderId:", orderId?.toString(10));
     if (!orderId) {
       showToast("error", "Failed to obtain order ID");
       hideLoading();
@@ -173,10 +181,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       const msg = JSON.stringify(address)
       const enMsg = await encryptMsg(msg, seller.encryptKey)
       console.debug("enMsg:", enMsg)
-      cid = await addJson(ctx, { seller: product.uid, enMsg })
+      cid = await addJson(ctx, { seller: productInfo.uid, enMsg })
       console.debug("cid:", cid)
     }
-    await safeExecuteAsync(async () => {
+    const result = await safeExecuteAsync(async () => {
       const callData = {
         from: user!.uid,
         value: 0,
@@ -186,15 +194,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         args: [orderId.toString(10), quantity, cid],
         multyAssetValues: []
       }
-      console.debug("callData:", callData);
-      const txHash = await window.nabox!.contractCall(callData);
-      await ctx?.nuls?.waitingResult(txHash);
+      console.debug("callData:", callData)
+      const txHash = await window.nabox!.contractCall(callData)
+      await ctx?.nuls?.waitingResult(txHash)
+      return true
     }, undefined, () => {
       hideLoading()
-      if (onBuy) {
-        onBuy(product, quantity);
-      }
     })
+    if (result) {
+      if (onBuy) {
+        onBuy(productInfo, quantity, address)
+      }
+    }
   }
 
   const onQuantityClose = () => {
@@ -267,15 +278,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           onDelist={onDelist}
           isReview={isReview}
           onReview={onReview}
+          onBuy={beginBuy}
         />
       )}
 
       {/* QuantityDialog */}
-      {showQuantity &&
-        (
-          <QuantityDialog price={product.price} maxValue={product.stockCount} onConfirm={onQuantityConfirm} onClose={onQuantityClose} />
-        )
-      }
+      {showQuantity && (
+        <QuantityDialog price={product.price} maxValue={product.stockCount} onConfirm={onQuantityConfirm} onClose={onQuantityClose} />
+      )}
 
       {/* AddressDialog */}
       {showAddress && (
