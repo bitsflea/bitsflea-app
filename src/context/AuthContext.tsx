@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { UserInfo } from '../types';
 import EventEmitter from 'events';
 
@@ -17,6 +17,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedUser = localStorage.getItem('userInfo');
     return savedUser ? JSON.parse(savedUser) : null;
   });
+  const loginEmitter = useRef(new EventEmitter())
 
   const login = (userData: UserInfo) => {
     setUser(userData);
@@ -39,13 +40,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     };
-
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, loginEmitter: new EventEmitter() }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, loginEmitter: loginEmitter.current }}>
       {children}
     </AuthContext.Provider>
   );

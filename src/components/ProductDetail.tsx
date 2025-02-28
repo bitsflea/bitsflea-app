@@ -7,12 +7,8 @@ import { ReviewForm } from './ReviewForm';
 import { getCategoryByValue } from '../data/categories';
 import { getProductInfo, getUserExtendInfo } from '../utils/ipfs';
 import { useHelia } from '../context/HeliaContext';
-import { useToast } from '../context/ToastContext';
 import { addFavorite, addFollowing, delFavorite, delFollowing, hasFavorite, hasFollowing } from '../utils/db';
 import { useAuth } from '../context/AuthContext';
-import { QuantityDialog } from './QuantityDialog';
-import { useLoading } from '../context/LoadingContext';
-import config from '../data/config';
 import { safeExecuteAsync } from '../data/error';
 
 interface ProductDetailProps {
@@ -23,6 +19,7 @@ interface ProductDetailProps {
   isReview?: boolean;
   onDelist?: (productId: string) => void;
   onReview?: (productId: string, approved: boolean, reason: string) => void;
+  onBuy?: (product: Product) => void;
 }
 
 export const ProductDetail: React.FC<ProductDetailProps> = ({
@@ -32,19 +29,17 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   isManagement = false,
   isReview = false,
   onDelist,
-  onReview
+  onReview,
+  onBuy
 }) => {
   // const [showChat, setShowChat] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
-  const { user } = useAuth()
+  const { user, isAuthenticated, loginEmitter } = useAuth()
   const { userDB } = useHelia()
   const ctx = useHelia();
-  const { showToast } = useToast();
   const [userExtendInfo, setUserExtendInfo] = useState<UserExtendInfo>({ x: "", tg: "", e: "", d: "" });
-  const [showQuantity, setShowQuantity] = useState(false);
-  const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
     const loadProductInfo = async () => {
@@ -91,52 +86,18 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
     { icon: Shield, text: "Buyer Protection" }
   ];
 
-  const handleBuy = async () => {
-    try {
-      console.debug('Buying product:', product);
-      if (product.isRetail && product.stockCount > 1) {
-        setShowQuantity(true);
-      } else {
-        await onConfirm(product.stockCount);
-      }
-    } catch (error) {
-      console.error('Error processing purchase:', error);
+  const handleBuy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      onClose()
+      loginEmitter.emit("showLogin")
+      return
+    }
+    if (onBuy) {
+      onClose()
+      onBuy(product)
     }
   };
-
-  const onConfirm = async (quantity: number) => {
-    setShowQuantity(false);
-    console.debug("quantity:", quantity)
-    showLoading()
-    const orderId = await ctx.bitsflea!.newOrderId(user!.uid, product.pid);
-    console.debug("orderId:", orderId);
-    if (!orderId) {
-      showToast("error", "Failed to obtain order ID");
-      hideLoading();
-      return;
-    }
-    await safeExecuteAsync(async () => {
-      const callData = {
-        from: user!.uid,
-        value: 0,
-        contractAddress: config.contracts.Bitsflea,
-        methodName: "placeOrder",
-        methodDesc: "",
-        args: [orderId.toString(10), quantity],
-        multyAssetValues: []
-      }
-      console.debug("callData:", callData);
-      const txHash = await window.nabox!.contractCall(callData);
-      await ctx?.nuls?.waitingResult(txHash);
-      onClose();
-    }, undefined, () => {
-      hideLoading()
-    })
-  }
-
-  const onQuantityClose = () => {
-    setShowQuantity(false);
-  }
 
   const handleDelist = () => {
     if (onDelist) {
@@ -360,13 +321,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
           onSubmit={handleReview}
         />
       )}
-
-      {/* QuantityDialog */}
-      {showQuantity &&
-        (
-          <QuantityDialog price={product.price} maxValue={product.stockCount} onConfirm={onConfirm} onClose={onQuantityClose} />
-        )
-      }
     </>
   );
 };
