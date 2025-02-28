@@ -52,7 +52,7 @@ export const CategoryMenu: React.FC<CategoryMenuProps> = ({ activeCategory, onCa
       <div className="hidden md:block overflow-x-auto pb-4 no-scrollbar">
         <div className="flex items-center gap-2 px-2">
           {categories.map(({ name, icon: CategoryIcon, value }) => {
-            const isActive = activeCategory === value;
+            const isActive = !!activeCategory ? activeCategory === value : value === undefined;
             return (
               <button
                 key={name}
