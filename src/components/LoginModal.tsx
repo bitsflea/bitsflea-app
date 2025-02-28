@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Wallet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { RegisterModal } from './RegisterModal';
@@ -9,6 +9,7 @@ import { getHash } from '../utils/nuls';
 import { addImages, addUserExtendInfo } from '../utils/ipfs';
 import { safeExecuteAsync } from '../data/error';
 import { useLoading } from '../context/LoadingContext';
+import { encryptMsg } from 'nuls-api-v2';
 
 declare global {
   interface Window {
@@ -24,11 +25,22 @@ interface LoginModalProps {
 
 
 export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) => {
-  const { login } = useAuth();
-  const [showRegister, setShowRegister] = useState(false);
-  const [connectedAddress, setConnectedAddress] = useState<string>('');
+  const { login } = useAuth()
+  const [showRegister, setShowRegister] = useState(false)
+  const [connectedAddress, setConnectedAddress] = useState<string>('')
+  const [globalParams, setGlobalParams] = useState<any>()
   const ctx = useHelia();
-  const { showLoading, hideLoading } = useLoading();
+  const { showLoading, hideLoading } = useLoading()
+
+  useEffect(() => {
+    const loadGlobal = async () => {
+      const g = await ctx.bitsflea!.getGlobal()
+      setGlobalParams(g)
+    }
+    if (ctx && ctx.bitsflea) {
+      loadGlobal()
+    }
+  }, [])
 
   // Get user info from localStorage
   const mockFetchUserInfo = async (address: string): Promise<UserInfo | null | undefined> => {
@@ -36,7 +48,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
     console.debug("userInfo:", userInfo);
 
     // Save to localStorage
-    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+    localStorage.setItem(config.KEY_USER, JSON.stringify(userInfo));
     return userInfo;
   };
 
@@ -74,8 +86,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
     showLoading()
     //Create new user
     const phoneHash = getHash(info.phone);
-    const phoneEncrypt = "";  //TODO: Encrypt phone number
-    const referrer = null;
+    const phoneEncrypt = await encryptMsg(info.phone, globalParams!.encryptKey);
+    console.debug("phoneEncrypt:",phoneEncrypt)
+
+    const referrer = localStorage.getItem(config.KEY_REF);
     const avatar = info.avatar.startsWith("http") ? info.avatar : (await addImages(ctx, [info.avatar]))[0];
     const extendInfo = await addUserExtendInfo(ctx, { x: "", tg: info.tg, e: "", d: info.description });
 
