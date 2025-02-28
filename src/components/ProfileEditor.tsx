@@ -56,7 +56,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Avatar Upload */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative group">

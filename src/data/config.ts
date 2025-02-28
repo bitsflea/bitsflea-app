@@ -20,6 +20,8 @@ export default {
         condition: ["Gently used", "All original parts", "Fully functional", "Minor wear and tear"],
         shipping: ["Secure packaging", "Tracked shipping", "Insurance included", "2-3 business days"]
     },
-    topic_file: 'bitsflea-file-topic'
+    topic_file: 'bitsflea-file-topic',
+    KEY_REF: 'ref',
+    KEY_USER: 'userInfo'
 
 }

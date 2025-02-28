@@ -10,25 +10,36 @@ import { ProductReview } from './components/ProductReview';
 import { Footer } from './components/Footer';
 import { BackToTop } from './components/BackToTop';
 import { useAuth } from './context/AuthContext';
-
+import { isAddress } from 'nuls-api-v2';
+import config from './data/config';
 
 export default function App() {
-  const [activeCategory, setActiveCategory] = useState<number | undefined | null>(null);
-  const [showUserCenter, setShowUserCenter] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showReviewerList, setShowReviewerList] = useState(false);
-  const [showProductReview, setShowProductReview] = useState(false);
-  const [query, setQuery] = useState('');
-  const { isAuthenticated, logout, user, loginEmitter } = useAuth();
+  const [activeCategory, setActiveCategory] = useState<number | undefined | null>(null)
+  const [showUserCenter, setShowUserCenter] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showReviewerList, setShowReviewerList] = useState(false)
+  const [showProductReview, setShowProductReview] = useState(false)
+  const [query, setQuery] = useState('')
+  const { isAuthenticated, logout, user, loginEmitter } = useAuth()
 
   useEffect(() => {
+    const oldRef = localStorage.getItem(config.KEY_REF)
+    console.debug("oldRef:", oldRef)
+    if (!oldRef || !isAddress(oldRef)) {
+      const params = new URLSearchParams(window.location.search)
+      const ref = params.get(config.KEY_REF)
+      console.debug("ref:", ref)
+      if (ref && isAddress(ref)) {
+        localStorage.setItem(config.KEY_REF, ref)
+      }
+    }
+
     const showLoginListener = () => {
       setShowLoginModal(true)
-    };
-
+    }
     loginEmitter.on('showLogin', showLoginListener)
 
-    // 清理事件监听
+    // clean event
     return () => {
       loginEmitter.off('showLogin', showLoginListener)
     };
