@@ -30,7 +30,7 @@ import jaysonPromiseBrowserClient from "jayson/promise/lib/client/browser";
 import { createOrbitDB } from '@orbitdb/core';
 import { json as Json, type JSON as HJSON } from '@helia/json'
 
-const SERVER_ID = "12D3KooWT36TURqwnygqydMHCT4fFeHdGibgW7EwcWGaj9CEnk3h"
+// const SERVER_ID = "12D3KooWT36TURqwnygqydMHCT4fFeHdGibgW7EwcWGaj9CEnk3h"
 
 async function initPriKey() {
     let uid = localStorage.getItem("uid") ?? Math.floor(Math.random() * 10 ** 8).toString()

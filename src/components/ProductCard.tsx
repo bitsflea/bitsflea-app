@@ -181,7 +181,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       const msg = JSON.stringify(address)
       const enMsg = await encryptMsg(msg, seller.encryptKey)
       console.debug("enMsg:", enMsg)
-      cid = await addJson(ctx, { seller: productInfo.uid, enMsg })
+      cid = await addJson(ctx, { id: address.id, seller: productInfo.uid, enMsg })
       console.debug("cid:", cid)
     }
     const result = await safeExecuteAsync(async () => {
