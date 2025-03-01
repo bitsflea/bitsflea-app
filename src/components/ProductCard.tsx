@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Address, Product, ProductInfo, ProductStatus } from '../types';
+import { Address, Order, Product, ProductInfo, ProductStatus } from '../types';
 import { ProductDetail } from './ProductDetail';
 import { ImageCarousel } from './ImageCarousel';
 import { AlertCircle, CheckCircle2, Clock, Lock, XCircle } from 'lucide-react';
@@ -13,6 +13,7 @@ import config from '../data/config';
 import { safeExecuteAsync } from '../data/error';
 import { AddressDialog } from './AddressDialog';
 import { encryptMsg } from 'nuls-api-v2';
+import { OrderDetail } from './OrderDetail';
 
 interface ProductCardProps {
   product: Product;
@@ -95,6 +96,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [showAddress, setShowAddress] = useState(false);
   const { showLoading, hideLoading } = useLoading();
   const { user, isAuthenticated, loginEmitter } = useAuth();
+  const [pendingOrder, setPendingOrder] = useState<Order | null>();
 
   useEffect(() => {
     const loadProductInfo = async () => {
@@ -206,6 +208,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         onBuy(productInfo, quantity, address)
       }
     }
+    showPayOrder(orderId.toString(10))
   }
 
   const onQuantityClose = () => {
@@ -218,6 +221,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       onDelist(product.pid);
     }
   };
+
+  const showPayOrder = async (orderId: string) => {
+    const order = await ctx.bitsflea?.getOrder(orderId)
+    console.debug("order:", order)
+    if (order) {
+      order.product = product
+      order.product.info = productInfo
+      setPendingOrder(order)
+    }
+  }
 
   return (
     <>
@@ -290,6 +303,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* AddressDialog */}
       {showAddress && (
         <AddressDialog quantity={quantity} onConfirm={onConfirm} onClose={onAddressClose} />
+      )}
+
+      {/* pay order */}
+      {pendingOrder != null && (
+        <OrderDetail order={pendingOrder} onClose={() => setPendingOrder(null)} />
       )}
     </>
   );

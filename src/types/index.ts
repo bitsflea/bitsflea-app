@@ -249,6 +249,7 @@ export interface BitsFlea {
   getUsersByIds: (ids: string[]) => Promise<UserInfo[]>
   getProductsByIds: (ids: string[]) => Promise<Product[]>
   getGlobal: () => Promise<any>
+  getOrder: (oid: string) => Promise<Order | null>
 }
 
 export interface HeliaContextType {
