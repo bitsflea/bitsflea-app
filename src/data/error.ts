@@ -55,7 +55,10 @@ export const ErrorInfo: Map<string, string> = Object.freeze(new Map([
 export const safeExecuteAsync = async (callback: Function, errorTitle?: string, finallyCallback?: Function) => {
     try {
         const result = await callback();
-        if (result && "error" in result) {
+        if (typeof result === "boolean") {
+            return result
+        }
+        if (result && typeof result === "object" && "error" in result) {
             showToastGlobal("error", result.error.message)
             return null
         }
