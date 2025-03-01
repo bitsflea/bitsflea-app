@@ -45,7 +45,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const showToast = useCallback((type: ToastType, message: string) => {
         const id = Date.now();
         setToasts(prev => [...prev, { id, type, message }]);
-        setTimeout(() => removeToast(id), 3000); // Auto dismiss after 3 seconds
+        setTimeout(() => removeToast(id), 5000); // Auto dismiss after 5 seconds
     }, [removeToast]);
 
     const getToastIcon = (type: ToastType) => {
@@ -69,7 +69,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return (
         <ToastContext.Provider value={{ showToast }}>
             {children}
-            <div className="fixed bottom-4 right-4 z-[110] flex flex-col gap-2">
+            <div className="fixed top-4 right-4 z-[110] flex flex-col gap-2">
                 {toasts.map(toast => (
                     <div
                         key={toast.id}
