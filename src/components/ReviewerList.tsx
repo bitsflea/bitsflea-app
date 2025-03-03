@@ -105,6 +105,7 @@ export const ReviewerList: React.FC = () => {
       console.debug("callData:", callData);
       const txHash = await window.nabox!.contractCall(callData);
       await nuls?.waitingResult(txHash);
+      setSearchQuery('')
     })
     hideLoading();
   };
