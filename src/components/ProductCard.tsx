@@ -14,6 +14,7 @@ import { safeExecuteAsync } from '../data/error';
 import { AddressDialog } from './AddressDialog';
 import { encryptMsg } from 'nuls-api-v2';
 import { OrderDetail } from './OrderDetail';
+import { getAsset } from '../utils/nuls';
 
 interface ProductCardProps {
   product: Product;
@@ -97,14 +98,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const { showLoading, hideLoading } = useLoading();
   const { user, isAuthenticated, loginEmitter } = useAuth();
   const [pendingOrder, setPendingOrder] = useState<Order | null>();
+  const [loadInfo, setLoadInfo] = useState(false);
 
   useEffect(() => {
     const loadProductInfo = async () => {
+      setLoadInfo(true)
       await safeExecuteAsync(async () => {
         const info = await getProductInfo(ctx, product, 5000);
         console.debug("info:", info);
         setProductInfo(info);
       })
+      setLoadInfo(false)
     }
     if (ctx && ctx.fs) {
       loadProductInfo()
@@ -112,7 +116,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   }, [ctx?.fs, product.description])
 
   const handleClick = () => {
-    console.debug("productInfo:", productInfo)
+    console.debug("product:", productInfo, product)
     if (onClick) {
       onClick();
     } else {
@@ -239,7 +243,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         onClick={handleClick}
       >
         <div className="relative">
-          <ImageCarousel images={productInfo.images} height="h-32 sm:h-40" />
+          <ImageCarousel images={productInfo.images} height="h-32 sm:h-40" loadData={loadInfo} />
           {/* Show status only in management view */}
           {isManagement && (
             <div className="absolute top-2 right-2">
@@ -262,13 +266,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <div className="p-2 sm:p-3 flex flex-col flex-1">
           <div className="flex-1">
             <h3 className="text-sm font-medium text-gray-800 line-clamp-1 mb-1">
-              {productInfo?.name}
+              {productInfo?.name || product.name}
             </h3>
             <p className="text-xs text-gray-600 mb-1 line-clamp-2">
               {productInfo?.description}
             </p>
             <span className="text-sm font-semibold text-primary-600">
-              ${productInfo?.price}
+              ${productInfo?.price || getAsset(product.price)}
             </span>
           </div>
           {!isManagement && !isReview && (
