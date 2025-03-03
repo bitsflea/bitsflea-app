@@ -1,4 +1,4 @@
-import { parseNULS, fromNULS } from 'nuls-api-v2';
+import { fromNULS } from 'nuls-api-v2';
 import CryptoJS from "crypto-js";
 import { getCurrencyByValue } from '../utils/tools'
 import { Price } from '../types';

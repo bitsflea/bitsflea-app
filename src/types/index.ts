@@ -120,6 +120,7 @@ export interface LocationValue {
 }
 
 export interface Product {
+  name: string;
   category: number;
   description: string;
   isNew: boolean;

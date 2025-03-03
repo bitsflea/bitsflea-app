@@ -6,11 +6,13 @@ import { getImages } from '../utils/ipfs';
 interface ImageCarouselProps {
   images: string[];
   height?: string;
+  loadData?: boolean;
 }
 
 export const ImageCarousel: React.FC<ImageCarouselProps> = ({
   images,
-  height = "h-48"
+  height = "h-48",
+  loadData
 }) => {
   const heliaContext = useHelia();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -27,7 +29,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
       setLocalImages(_localImages)
     }
     if (heliaContext && heliaContext!.fs) {
-        fetchImages()
+      fetchImages()
     }
   }, [images.length])
 
@@ -56,7 +58,7 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {loading ? <img src='/loading.gif' className='absolute h-full left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2' /> :
+      {(loading || loadData) ? <img src='/loading.gif' className='absolute h-full left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2' /> :
         (
           localImages.length > 0 ?
             localImages.map((image, index) => (
