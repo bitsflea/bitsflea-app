@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Camera, Phone, User, FileText } from 'lucide-react';
+import { showAddress } from '../utils/nuls';
 
 interface RegisterModalProps {
   onClose: () => void;
@@ -89,7 +90,8 @@ export const RegisterModal: React.FC<RegisterModalProps> = ({
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500">Wallet Address</span>
-              <span className="text-sm font-medium text-gray-900">{walletAddress}</span>
+              <span className="text-sm hidden md:block font-medium text-gray-900">{walletAddress}</span>
+              <span className="text-sm md:hidden font-medium text-gray-900">{showAddress(walletAddress)}</span>
             </div>
           </div>
 
