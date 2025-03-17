@@ -4,8 +4,8 @@ export default {
     // chainAPI: "http://localhost:5173/api",
     chainAPI: "https://beta.api.nuls.io/jsonrpc/",
     contracts: {
-        Bitsflea: "tNULSeBaMzYcrWNadQdCunL8JLhKXrvVzDGrFE",
-        Point: "tNULSeBaMymUj7uFPfP8WKaCPehqDRd5ZmfrsH"
+        Bitsflea: "NULSd6HgsKDNSpGc8bs8QZ1BoXtPZX6X9EHFt",
+        Point: "NULSd6HgpLnG95UKDdS7seHhTWYMkQAX4dskN"
     },
     googleAPIKey: "QUl6YVN5QnpGVHJaanM3YWg4MXdxYWpaaEVGMl9iUWg1LU12cU9F",
     currencies: [
