@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import { Package, MapPin, Heart, Store, Shield, Star, Pencil, ShoppingBag, Truck, Aperture } from 'lucide-react';
-import { ProductManagement } from './ProductManagement';
+import { ProductManagement, ProductManagementRef } from './ProductManagement';
 import { PurchaseManagement } from './PurchaseManagement';
 import { AddressManagement } from './AddressManagement';
 import { FavoriteManagement } from './FavoriteManagement';
@@ -28,7 +28,11 @@ const tabs = [
   { id: 'following', label: 'Following', icon: Store },
 ];
 
-export const UserCenter: React.FC = () => {
+export interface UserCenterRef {
+  showPublish: () => void
+}
+
+export const UserCenter = forwardRef<UserCenterRef>((_, ref) => {
   const [activeTab, setActiveTab] = useState('purchases');
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [userExtendInfo, setUserExtendInfo] = useState<UserExtendInfo>({ x: "", tg: "", e: "", d: "" });
@@ -36,8 +40,16 @@ export const UserCenter: React.FC = () => {
   const ctx = useHelia();
   const { showLoading, hideLoading } = useLoading();
   const { showToast } = useToast()
+  const productManagementRef = useRef<ProductManagementRef>(null)
 
   // console.debug("user:", user)
+
+  useImperativeHandle(ref, () => ({
+    showPublish: () => {
+      setActiveTab('products')
+      setTimeout(() => { productManagementRef.current?.showPublish() }, 300)
+    }
+  }))
 
   useEffect(() => {
     const fetchUserExtendInfo = async () => {
@@ -123,7 +135,7 @@ export const UserCenter: React.FC = () => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900">Listings</h2>
-            <ProductManagement />
+            <ProductManagement ref={productManagementRef} />
           </div>
         );
 
@@ -277,4 +289,4 @@ export const UserCenter: React.FC = () => {
       </div>
     </div>
   );
-};
+});

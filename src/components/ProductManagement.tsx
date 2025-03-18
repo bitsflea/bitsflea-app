@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { Plus, Filter, ChevronDown } from 'lucide-react';
 import { Product, ProductStatus } from '../types';
 import { ProductCard } from './ProductCard';
@@ -13,8 +13,8 @@ import { useToast } from '../context/ToastContext';
 import { getCurrency } from '../utils/tools';
 import { safeExecuteAsync } from '../data/error';
 
-interface ProductManagementProps {
-  // products: Product[];
+export interface ProductManagementRef {
+  showPublish: () => void;
 }
 
 const statusFilters: { value: ProductStatus | 'all'; label: string }[] = [
@@ -28,7 +28,7 @@ const statusFilters: { value: ProductStatus | 'all'; label: string }[] = [
 
 const ITEMS_PER_PAGE = 8;
 
-export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
+export const ProductManagement = forwardRef<ProductManagementRef>((_, ref) => {
   const [activeFilter, setActiveFilter] = useState<ProductStatus | 'all'>('all');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showPublishForm, setShowPublishForm] = useState(false);
@@ -44,6 +44,12 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
 
 
   const activeFilterLabel = statusFilters.find(f => f.value === activeFilter)?.label;
+
+  useImperativeHandle(ref, () => ({
+    showPublish: () => {
+      setShowPublishForm(true)
+    }
+  }))
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -264,4 +270,4 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({ }) => {
       )}
     </>
   );
-};
+});

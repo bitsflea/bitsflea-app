@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { ProductGrid } from './components/ProductGrid';
 import { SearchBar } from './components/SearchBar';
 import { CategoryMenu } from './components/CategoryMenu';
-import { UserCenter } from './components/UserCenter';
+import { UserCenter, UserCenterRef } from './components/UserCenter';
 import { LoginModal } from './components/LoginModal';
 import { ReviewerList } from './components/ReviewerList';
 import { ProductReview } from './components/ProductReview';
@@ -12,6 +12,7 @@ import { BackToTop } from './components/BackToTop';
 import { useAuth } from './context/AuthContext';
 import { isAddress } from 'nuls-api-v2';
 import config from './data/config';
+import { SaleBtn } from './components/SaleBtn';
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<number | undefined | null>(null)
@@ -19,8 +20,20 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showReviewerList, setShowReviewerList] = useState(false)
   const [showProductReview, setShowProductReview] = useState(false)
+  const [isPublish, setIsPublish] = useState(false)
   const [query, setQuery] = useState('')
   const { isAuthenticated, logout, user, loginEmitter } = useAuth()
+  const userCenterRef = useRef<UserCenterRef>(null)
+
+  const handlePublish = () => {
+    setShowUserCenter(true)
+    setTimeout(() => { userCenterRef.current?.showPublish() }, 300)
+  }
+
+  const handleLogin = () => {
+    setIsPublish(true)
+    setShowLoginModal(true)
+  }
 
   useEffect(() => {
     const oldRef = localStorage.getItem(config.KEY_REF)
@@ -58,6 +71,10 @@ export default function App() {
   const handleLoginSuccess = () => {
     setShowLoginModal(false);
     setShowUserCenter(true);
+    if (isPublish) {
+      setIsPublish(false)
+      setTimeout(() => { userCenterRef.current?.showPublish() }, 200)
+    }
   };
 
   const handleLogout = () => {
@@ -90,7 +107,7 @@ export default function App() {
 
   const renderContent = () => {
     if (showUserCenter) {
-      return <UserCenter />;
+      return <UserCenter ref={userCenterRef} />;
     }
     if (showReviewerList) {
       return <ReviewerList />;
@@ -148,6 +165,7 @@ export default function App() {
       {renderContent()}
       <Footer />
       <BackToTop />
+      <SaleBtn onPublish={handlePublish} onLogin={handleLogin} />
       {showLoginModal && (
         <LoginModal
           onClose={() => setShowLoginModal(false)}
