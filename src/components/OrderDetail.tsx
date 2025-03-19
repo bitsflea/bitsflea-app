@@ -51,6 +51,28 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
         }
     }, [order.oid])
 
+    const handleCancel = async () => {
+        showLoading();
+        await safeExecuteAsync(async () => {
+            console.debug('Cancel order:', order);
+            const callData = {
+                from: user!.uid,
+                value: 0,
+                contractAddress: config.contracts.Bitsflea,
+                methodName: "cancelOrder",
+                methodDesc: "",
+                args: [order.oid],
+                multyAssetValues: []
+            }
+            console.debug("callData:", callData);
+            const txHash = await window.nabox!.contractCall(callData);
+            await nuls?.waitingResult(txHash);
+            onClose();
+        }, "cancel error:", () => {
+            hideLoading();
+        });
+    }
+
     const handlePayment = async () => {
         showLoading();
         await safeExecuteAsync(async () => {
@@ -341,20 +363,11 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                                         </div>
                                     )}
                                 </div>
-                                {order.status === OrderStatus.PendingPayment && user?.uid == order.buyer && (
-                                    <button
-                                        onClick={handlePayment}
-                                        className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
-                                    >
-                                        <Wallet className="h-5 w-5" />
-                                        <span>Pay Now</span>
-                                    </button>
-                                )}
 
                                 {order.status === OrderStatus.PendingShipment && user?.uid === order.seller && (
                                     <button
                                         onClick={handleShipping}
-                                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
+                                        className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
                                     >
                                         <Truck className="h-5 w-5" />
                                         <span>Shipping</span>
@@ -364,7 +377,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                                 {order.status === OrderStatus.Returning && (returnInfo && returnInfo.status === 0) && user?.uid === order.buyer && (
                                     <button
                                         onClick={handleShipReturn}
-                                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
+                                        className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
                                     >
                                         <Truck className="h-5 w-5" />
                                         <span>Ship Return</span>
@@ -374,7 +387,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                                 {order.status === OrderStatus.Returning && (returnInfo && returnInfo.status === 100) && user?.uid === order.seller && (
                                     <button
                                         onClick={handleReConfirmReceipt}
-                                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
+                                        className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
                                     >
                                         <Truck className="h-5 w-5" />
                                         <span>Confirm</span>
@@ -382,6 +395,61 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                                 )}
 
                             </div>
+                            {order.status === OrderStatus.PendingPayment && user?.uid == order.buyer && (
+                                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200">
+                                    <button
+                                        onClick={handleCancel}
+                                        className="flex items-center gap-2 px-4 py-2 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors"
+                                    >
+                                        <RotateCcw className="h-5 w-5" />
+                                        <span>Cancel</span>
+                                    </button>
+                                    <button
+                                        onClick={handlePayment}
+                                        className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
+                                    >
+                                        <Wallet className="h-5 w-5" />
+                                        <span>Pay Now</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {order.status === OrderStatus.PendingShipment && user?.uid === order.seller && (
+                                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200 sm:hidden">
+                                    <button
+                                        onClick={handleShipping}
+                                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
+                                    >
+                                        <Truck className="h-5 w-5" />
+                                        <span>Shipping</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {order.status === OrderStatus.Returning && (returnInfo && returnInfo.status === 0) && user?.uid === order.buyer && (
+                                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200 sm:hidden">
+                                    <button
+                                        onClick={handleShipReturn}
+                                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
+                                    >
+                                        <Truck className="h-5 w-5" />
+                                        <span>Ship Return</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {order.status === OrderStatus.Returning && (returnInfo && returnInfo.status === 100) && user?.uid === order.seller && (
+                                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200 sm:hidden">
+                                    <button
+                                        onClick={handleReConfirmReceipt}
+                                        className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100"
+                                    >
+                                        <Truck className="h-5 w-5" />
+                                        <span>Confirm</span>
+                                    </button>
+                                </div>
+                            )}
+
                             {order.status === OrderStatus.PendingReceipt && user?.uid === order.buyer && (
                                 <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200">
                                     <button
