@@ -107,9 +107,15 @@ export const OrderItem: React.FC<OrderItemProps> = ({ order, onClick }) => {
     }
   }, [order.pid])
 
+  const handleClick = () => {
+    if (productInfo && onClick) {
+      onClick()
+    }
+  }
+
   return (
     <div
-      onClick={onClick}
+      onClick={handleClick}
       className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
     >
       <div className="p-4">
@@ -128,13 +134,19 @@ export const OrderItem: React.FC<OrderItemProps> = ({ order, onClick }) => {
               src="/loading.gif"
               className="w-20 h-20 object-cover rounded-lg"
             />
+          ) : (productInfo.images.length < 1 ? (
+            <img
+              src={"/logo.png"}
+              alt={productInfo.name}
+              className="w-20 h-20 object-cover rounded-lg"
+            />
           ) : (
             <img
               src={productInfo.images[0]}
               alt={productInfo.name}
               className="w-20 h-20 object-cover rounded-lg"
             />
-          )}
+          ))}
 
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-medium text-gray-900 mb-1 line-clamp-2">

@@ -72,6 +72,28 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
             hideLoading();
         });
     }
+    
+    const handleRelease = async () => {
+        showLoading();
+        await safeExecuteAsync(async () => {
+            console.debug('Cancel order:', order);
+            const callData = {
+                from: user!.uid,
+                value: 0,
+                contractAddress: config.contracts.Bitsflea,
+                methodName: "releaseOrder",
+                methodDesc: "",
+                args: [order.oid],
+                multyAssetValues: []
+            }
+            console.debug("callData:", callData);
+            const txHash = await window.nabox!.contractCall(callData);
+            await nuls?.waitingResult(txHash);
+            onClose();
+        }, "cancel error:", () => {
+            hideLoading();
+        });
+    }
 
     const handlePayment = async () => {
         showLoading();
@@ -410,6 +432,18 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                                     >
                                         <Wallet className="h-5 w-5" />
                                         <span>Pay Now</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {order.status === OrderStatus.PendingPayment && user?.uid == order.seller && statusInfo.timeoutDate! < Math.floor(Date.now() / 1000) && (
+                                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200">
+                                    <button
+                                        onClick={handleRelease}
+                                        className="flex items-center gap-2 px-4 py-2 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors"
+                                    >
+                                        <RotateCcw className="h-5 w-5" />
+                                        <span>Cancel</span>
                                     </button>
                                 </div>
                             )}
