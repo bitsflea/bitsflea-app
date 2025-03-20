@@ -165,7 +165,9 @@ export default function App() {
       {renderContent()}
       <Footer />
       <BackToTop />
-      <SaleBtn onPublish={handlePublish} onLogin={handleLogin} />
+      {showUserCenter==false&&(
+        <SaleBtn onPublish={handlePublish} onLogin={handleLogin} />
+      )}
       {showLoginModal && (
         <LoginModal
           onClose={() => setShowLoginModal(false)}

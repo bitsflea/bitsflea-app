@@ -160,7 +160,7 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full h-10 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Enter product name"
                   required
                 />
@@ -174,7 +174,7 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
                   id="category"
                   value={formData.category}
                   onChange={(e) => setFormData(prev => ({ ...prev, category: Number(e.target.value) }))}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full h-10 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   {categories.filter(v => v.value != null).map(({ name,value }) => (
                     <option key={name} value={value}>

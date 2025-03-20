@@ -36,11 +36,11 @@ export const GoogleMapsLocationSelector: React.FC<GoogleMapsLocationSelectorProp
     const servicesRef = useRef<{
         autocomplete: google.maps.places.AutocompleteService | null;
         places: google.maps.places.PlacesService | null;
-        geocoder: google.maps.Geocoder | null;
+        // geocoder: google.maps.Geocoder | null;
     }>({
         autocomplete: null,
         places: null,
-        geocoder: null
+        // geocoder: null
     });
 
     // Initialize Google Maps
@@ -53,7 +53,7 @@ export const GoogleMapsLocationSelector: React.FC<GoogleMapsLocationSelectorProp
         servicesRef.current = {
             autocomplete: new window.google.maps.places.AutocompleteService(),
             places: new window.google.maps.places.PlacesService(map),
-            geocoder: new window.google.maps.Geocoder()
+            // geocoder: new window.google.maps.Geocoder()
         };
 
         setMapLoaded(true);
@@ -111,17 +111,25 @@ export const GoogleMapsLocationSelector: React.FC<GoogleMapsLocationSelectorProp
     }, []);
 
     // Debounce search
+    const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     useEffect(() => {
-        const timeout = setTimeout(() => {
+        if (debounceTimeoutRef.current) {
+            clearTimeout(debounceTimeoutRef.current);
+        }
+        debounceTimeoutRef.current = setTimeout(() => {
             handleSearch(searchText);
-        }, 300); // 减少延迟以提高响应速度
-
-        return () => clearTimeout(timeout);
+        }, 300);
+    
+        return () => {
+            if (debounceTimeoutRef.current) {
+                clearTimeout(debounceTimeoutRef.current);
+            }
+        };
     }, [searchText, handleSearch]);
 
     const handleSuggestionClick = (suggestion: google.maps.places.AutocompletePrediction) => {
-        const { places, geocoder } = servicesRef.current;
-        if (!places || !geocoder) return;
+        const { places } = servicesRef.current;
+        if (!places) return;
 
         setSearchText(suggestion.description);
         setShowSuggestions(false);
