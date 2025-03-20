@@ -195,7 +195,7 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
                     id="price"
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full h-10 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="0.00"
                     min="0"
                     step="0.000001"
@@ -211,7 +211,7 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
                     id="shippingFee"
                     value={formData.shippingFee}
                     onChange={(e) => setFormData(prev => ({ ...prev, shippingFee: e.target.value }))}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full h-10 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="0.00"
                     min="0"
                     step="0.000001"
@@ -226,7 +226,7 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
                     id="currency"
                     value={formData.currency}
                     onChange={(e) => setFormData(prev => ({ ...prev, currency: e.target.value }))}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-gray-50"
+                    className="w-full h-10 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
                     {currencies.map(({ value, label }) => (
                       <option key={value} value={label}>
@@ -248,7 +248,7 @@ export const ProductPublish: React.FC<ProductPublishProps> = ({ onClose, onPubli
                     id="stock"
                     value={formData.stock}
                     onChange={(e) => setFormData(prev => ({ ...prev, stock: e.target.value }))}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full h-10 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="Enter stock quantity"
                     min="0"
                     required
