@@ -10,7 +10,7 @@ export default {
     googleAPIKey: "QUl6YVN5QnpGVHJaanM3YWg4MXdxYWpaaEVGMl9iUWg1LU12cU9F",
     currencies: [
         // { value: '0,0', label: 'BTF', decimals: 8 },
-        { value: '2,1', label: 'NAI', decimals: 8 },
+        { value: '2,1', label: 'NAI', decimals: 4 },
         { value: '2,201', label: 'BTC', decimals: 8 },
         { value: '2,202', label: 'ETH', decimals: 18 },
         { value: '5,7', label: 'USDT', decimals: 6 },
