@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Plus } from 'lucide-react';
 
 interface SaleBtnProps {
     onPublish?: () => void
@@ -18,8 +19,9 @@ export const SaleBtn: React.FC<SaleBtnProps> = ({ onPublish, onLogin }) => {
         }
     }
     return (
-        <button onClick={handleClick} className="fixed bottom-5 left-5 w-50 h-50 text-white px-6 py-3 rounded-full transition">
-            <img src='/sale.png' className='w-20' />
+        <button onClick={handleClick} className="fixed bg-primary-600 bottom-5 left-5 w-50 h-50 text-white px-6 py-3 rounded-full transition flex items-center space-x-2">
+            <Plus className="h-4 w-4" />
+            <span>Listing</span>
         </button>
     )
 }
