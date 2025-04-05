@@ -138,6 +138,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({
   };
 
   const openTelegram = (name: string) => {
+    if (name.startsWith("@")) {
+      name = name.substring(1)
+    }
     window.open(`https://t.me/${name}`, '_blank');
   }
 
