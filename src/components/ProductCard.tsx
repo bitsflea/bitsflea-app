@@ -201,7 +201,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         multyAssetValues: []
       }
       console.debug("callData:", callData)
-      const txHash = await window.nabox!.contractCall(callData)
+      const txHash = await window.NaboxWallet!.nai.contractCall(callData)
       await ctx?.nuls?.waitingResult(txHash)
       return true
     }, undefined, () => {

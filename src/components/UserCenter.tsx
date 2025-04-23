@@ -97,7 +97,7 @@ export const UserCenter = forwardRef<UserCenterRef>((_, ref) => {
           args: [nickname, head, eInfo],
           multyAssetValues: []
         }
-        const txHash = await window.nabox!.contractCall(callData);
+        const txHash = await window.NaboxWallet!.nai.contractCall(callData);
         await ctx?.nuls?.waitingResult(txHash);
         const newUser = await ctx?.bitsflea?.getUser(user!.uid);
         login(newUser!);

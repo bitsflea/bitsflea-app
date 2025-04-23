@@ -145,7 +145,7 @@ export const ProductManagement = forwardRef<ProductManagementRef>((_, ref) => {
         multyAssetValues: []
       }
       console.debug("callData:", callData);
-      const txHash = await window.nabox!.contractCall(callData);
+      const txHash = await window.NaboxWallet!.nai.contractCall(callData);
       await ctx?.nuls?.waitingResult(txHash);
     }, undefined, () => {
       hideLoading();
@@ -166,7 +166,7 @@ export const ProductManagement = forwardRef<ProductManagementRef>((_, ref) => {
         multyAssetValues: []
       }
       console.debug("callData:", callData);
-      const txHash = await window.nabox!.contractCall(callData);
+      const txHash = await window.NaboxWallet!.nai.contractCall(callData);
       await ctx?.nuls?.waitingResult(txHash);
 
       setManagedProducts(prev => prev.map(product =>

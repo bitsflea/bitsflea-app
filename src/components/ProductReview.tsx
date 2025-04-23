@@ -95,7 +95,7 @@ export const ProductReview: React.FC = () => {
         multyAssetValues: []
       }
       console.debug("callData:", callData);
-      const txHash = await window.nabox!.contractCall(callData);
+      const txHash = await window.NaboxWallet!.nai.contractCall(callData);
       await nuls?.waitingResult(txHash);
     }, undefined, () => {
       hideLoading()

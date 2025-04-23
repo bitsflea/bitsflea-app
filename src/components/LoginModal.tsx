@@ -13,7 +13,7 @@ import { encryptMsg } from 'nuls-api-v2';
 
 declare global {
   interface Window {
-    nabox?: Nabox;
+    NaboxWallet?: Nabox;
   }
 }
 
@@ -55,7 +55,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
   const handleConnectWallet = async (walletType: 'nabox' | 'metamask') => {
     if (walletType === 'nabox') {
       if ('nabox' in window) {
-        const naboxInfo = await window.nabox!.createSession();
+        const naboxInfo = await window.NaboxWallet!.nai.createSession();
         console.debug("naboxInfo:", naboxInfo)
         if (naboxInfo && naboxInfo.length > 0) {
           setConnectedAddress(naboxInfo[0]);
@@ -107,7 +107,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
         args: [info.nickname, phoneHash, phoneEncrypt, referrer, avatar, extendInfo],
         multyAssetValues: []
       }
-      const txHash = await window.nabox!.contractCall(data);
+      const txHash = await window.NaboxWallet!.nai.contractCall(data);
       await ctx?.nuls?.waitingResult(txHash);
 
       const newUser = await ctx?.bitsflea?.getUser(connectedAddress);

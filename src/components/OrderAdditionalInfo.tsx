@@ -68,7 +68,7 @@ export const OrderAdditionalInfo: React.FC<OrderAdditionalInfoProps> = ({
     try {
       let obj = await getJson<{ seller: string, enMsg: string }>(ctx, deliveryInfo!)
       if (JSON.stringify(obj) !== "{}") {
-        let msg = await window.nabox?.decryptData([obj.enMsg, user?.uid])
+        let msg = await window.NaboxWallet?.nai.decryptData([obj.enMsg, user?.uid])
         if (msg) {
           try {
             const addr = JSON.parse(msg)

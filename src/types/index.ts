@@ -234,11 +234,15 @@ export interface Order {
   product: Product;
 }
 
-export interface Nabox {
+export interface NAI {
   createSession: () => Promise<any>;
   contractCall: (data: any) => Promise<string>;
   decryptData: (data: any) => Promise<any>;
   getPub: (data: any) => Promise<any>;
+}
+
+export interface Nabox {
+  nai: NAI
 }
 
 export interface BitsFlea {

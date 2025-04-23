@@ -65,7 +65,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                 multyAssetValues: []
             }
             console.debug("callData:", callData);
-            const txHash = await window.nabox!.contractCall(callData);
+            const txHash = await window.NaboxWallet!.nai.contractCall(callData);
             await nuls?.waitingResult(txHash);
             onClose();
         }, "cancel error:", () => {
@@ -87,7 +87,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                 multyAssetValues: []
             }
             console.debug("callData:", callData);
-            const txHash = await window.nabox!.contractCall(callData);
+            const txHash = await window.NaboxWallet!.nai.contractCall(callData);
             await nuls?.waitingResult(txHash);
             onClose();
         }, "cancel error:", () => {
@@ -113,7 +113,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                 multyAssetValues: []
             }
             if (amount.assetId === "2,1") {
-                callData.value = amount.value;
+                callData.value = parseNULS(amount.value, amount.decimals).toString(10);
             } else if (amount.assetId === "0,0") {
                 callData.contractAddress = config.contracts.Point;
                 callData.methodName = "transferAndCall";
@@ -124,7 +124,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                 callData.multyAssetValues = [[parseNULS(amount.value, amount.decimals).toString(10), asset[0], asset[1]]]
             }
             console.debug("callData:", callData);
-            const txHash = await window.nabox!.contractCall(callData);
+            const txHash = await window.NaboxWallet!.nai.contractCall(callData);
             await nuls?.waitingResult(txHash);
             onClose();
         }, "payment error:", () => {
@@ -145,7 +145,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                 args: [order.oid],
                 multyAssetValues: []
             }
-            const txHash = await window.nabox!.contractCall(callData);
+            const txHash = await window.NaboxWallet!.nai.contractCall(callData);
             await nuls?.waitingResult(txHash);
             onClose();
         }, "Error confirming receipt:", () => {
@@ -166,7 +166,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                 args: [order.oid],
                 multyAssetValues: []
             }
-            const txHash = await window.nabox!.contractCall(callData);
+            const txHash = await window.NaboxWallet!.nai.contractCall(callData);
             await nuls?.waitingResult(txHash);
             onClose();
         }, "Error confirming receipt:", () => {
@@ -211,7 +211,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                 multyAssetValues: []
             }
             console.debug("callData:", callData);
-            const txHash = await window.nabox!.contractCall(callData);
+            const txHash = await window.NaboxWallet!.nai.contractCall(callData);
             await ctx?.nuls?.waitingResult(txHash);
         }, undefined, () => {
             hideLoading()
@@ -234,7 +234,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                     args: [order.oid, data.shipmentNumber],
                     multyAssetValues: []
                 }
-                const txHash = await window.nabox!.contractCall(callData);
+                const txHash = await window.NaboxWallet!.nai.contractCall(callData);
                 await nuls?.waitingResult(txHash);
                 onClose();
             } else if (order.status === OrderStatus.Returning && user?.uid === order.buyer) { //退货发货
@@ -247,7 +247,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onClose }) => {
                     args: [order.oid, data.shipmentNumber],
                     multyAssetValues: []
                 }
-                const txHash = await window.nabox!.contractCall(callData);
+                const txHash = await window.NaboxWallet!.nai.contractCall(callData);
                 await nuls?.waitingResult(txHash);
                 onClose();
             }

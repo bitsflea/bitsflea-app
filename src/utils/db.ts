@@ -10,7 +10,7 @@ export async function getAddresses(db: any, user: string) {
     if (!_d || _d === '[]') {
         let info = await db.get(user)
         if (info && info.value) {
-            let str = await window?.nabox?.decryptData([info.value.data, user])
+            let str = await window?.NaboxWallet?.nai.decryptData([info.value.data, user])
             if (str) {
                 data = JSON.parse(str)
                 localStorage.setItem(user, JSON.stringify(data))
@@ -26,7 +26,7 @@ export async function setAddresses(db: any, user: string, data: Address[] | unde
     localStorage.setItem(user, JSON.stringify(data))
     if (db) {
         if (data && data.length > 0) {
-            let pub = await window?.nabox?.getPub({ address: user })
+            let pub = await window?.NaboxWallet?.nai.getPub({ address: user })
             let info = { _id: user, data: await encryptMsg(JSON.stringify(data), pub) }
             await db.put(info)
         } else {
