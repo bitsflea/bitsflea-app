@@ -54,7 +54,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
 
   const handleConnectWallet = async (walletType: 'nabox' | 'metamask') => {
     if (walletType === 'nabox') {
-      if ('nabox' in window) {
+      if ('NaboxWallet' in window) {
         const naboxInfo = await window.NaboxWallet!.nai.createSession();
         console.debug("naboxInfo:", naboxInfo)
         if (naboxInfo && naboxInfo.length > 0) {

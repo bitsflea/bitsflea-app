@@ -7,10 +7,10 @@ import { HeliaProvider } from './context/HeliaContext';
 import { LoadingProvider } from './context/LoadingContext';
 import { ToastProvider } from './context/ToastContext';
 
-// import VConsole from 'vconsole';
+import VConsole from 'vconsole';
 
-// const vConsole = new VConsole();
-// console.debug('vConsole initialized!');
+const vConsole = new VConsole();
+console.debug('vConsole initialized!');
 
 createRoot(document.getElementById('root')!).render(
   // <StrictMode>
