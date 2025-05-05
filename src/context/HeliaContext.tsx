@@ -127,6 +127,11 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             try {
                 setLoading(true);
 
+                // 初始化 Bitsflea 合约
+                const bitsfleaInstance = await nulsInstance.contract(config.contracts.Bitsflea)
+                // console.debug("bitsfleaInstance:", bitsfleaInstance);
+                setBitsflea(bitsfleaInstance)
+
                 const { pri, uid } = await initPriKey()
                 const option = createOption(pri)
                 const libp2p = await createLibp2p(option);
@@ -191,16 +196,10 @@ export const HeliaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 const orbitdb = await createOrbitDB({ ipfs: heliaInstance, id: uid, directory: `bitsflea-user-data` })
                 const userDB = await orbitdb.open("/orbitdb/zdpuAsJkrPQ9yVYVVGzAz4aeaCxLvxYL7xdrEED6HwU8inNEV")
 
-
-                // 初始化 Bitsflea 合约
-                const bitsfleaInstance = await nulsInstance.contract(config.contracts.Bitsflea)
-                // console.debug("bitsfleaInstance:", bitsfleaInstance);
-
                 setUserDB(userDB)
                 setHelia(heliaInstance)
                 setFs(fsInstance)
                 setJson(jsonInstance)
-                setBitsflea(bitsfleaInstance)
             } catch (err) {
                 console.error('Failed to initialize Helia:', err)
                 setError(err);
