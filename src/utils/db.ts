@@ -6,18 +6,22 @@ export const KEY_FOLLOWING = "following"
 
 export async function getAddresses(db: any, user: string) {
     let data: Address[] = []
-    let _d = localStorage.getItem(user)
-    if (!_d || _d === '[]') {
-        let info = await db.get(user)
-        if (info && info.value) {
-            let str = await window?.NaboxWallet?.nai.decryptData([info.value.data, user])
-            if (str) {
-                data = JSON.parse(str)
-                localStorage.setItem(user, JSON.stringify(data))
+    try {
+        let _d = localStorage.getItem(user)
+        if (!_d || _d === '[]') {
+            let info = await db.get(user)
+            if (info && info.value) {
+                let str = await window?.NaboxWallet?.nai.decryptData([info.value.data, user])
+                if (str) {
+                    data = JSON.parse(str)
+                    localStorage.setItem(user, JSON.stringify(data))
+                }
             }
+        } else {
+            data = JSON.parse(_d)
         }
-    } else {
-        data = JSON.parse(_d)
+    } catch (e) {
+        console.warn('get addresses failed', e)
     }
     return data
 }
@@ -51,15 +55,19 @@ export async function setUserData(db: any, user: string, data: string[] | undefi
 export async function getUserData(db: any, user: string, prefix: string = KEY_FAVORITE) {
     const key = `${prefix}_${user}`
     let data: string[] = []
-    let _d = localStorage.getItem(key)
-    if (!_d || _d === '[]') {
-        let info = await db.get(key)
-        if (info && info.value && info.value.data) {
-            data = JSON.parse(info.value.data)
-            localStorage.setItem(key, info.value.data)
+    try {
+        let _d = localStorage.getItem(key)
+        if (!_d || _d === '[]') {
+            let info = await db.get(key)
+            if (info && info.value && info.value.data) {
+                data = JSON.parse(info.value.data)
+                localStorage.setItem(key, info.value.data)
+            }
+        } else {
+            data = JSON.parse(_d)
         }
-    } else {
-        data = JSON.parse(_d)
+    } catch (e) {
+        console.warn('get user data failed', e)
     }
     return data
 }
