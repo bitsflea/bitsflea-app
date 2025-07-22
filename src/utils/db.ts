@@ -7,7 +7,8 @@ export const KEY_FOLLOWING = "following"
 export async function getAddresses(db: any, user: string) {
     let data: Address[] = []
     try {
-        let _d = localStorage.getItem(user)
+        // let _d = localStorage.getItem(user)
+        let _d = '[]'
         if (!_d || _d === '[]') {
             let info = await db.get(user)
             if (info && info.value) {
